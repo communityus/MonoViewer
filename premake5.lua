@@ -167,6 +167,9 @@ solution "Radegast"
       "OpenMetaverseTypes",
       "OpenMetaverse.StructuredData",
       "OpenMetaverse.Rendering.Meshmerizer",
+	  "glib-sharp"
+	  "gtk-sharp"
+	  "atk-sharp"
       path.join("%{prj.location}", "assemblies", "OpenTK"),
       path.join("%{prj.location}", "assemblies", "OpenTK.GLControl"),
       path.join("%{prj.location}", "assemblies", "Tools"),

@@ -33,7 +33,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Windows.Forms;
+using Gtk;
 using Radegast.Commands;
 using Radegast.Netcom;
 using Radegast.Media;
@@ -243,8 +243,7 @@ namespace Radegast
 
             if (!System.Diagnostics.Debugger.IsAttached)
             {
-                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                Application.ThreadException += HandleThreadException;
+                GLib.ExceptionManager.UnhandledException += HandleThreadException;
             }
 
             Client = client0;
@@ -256,9 +255,10 @@ namespace Radegast
             // Are we running mono?
             MonoRuntime = Type.GetType("Mono.Runtime") != null;
 
-            Keyboard = new Keyboard();
-            Application.AddMessageFilter(Keyboard);
-
+            // *FIXME: Do something similar via Gdk
+            //Keyboard = new Keyboard();
+            //Application.AddMessageFilter(Keyboard);
+            
             Netcom = new RadegastNetcom(this);
             State = new StateManager(this);
             MediaManager = new MediaManager(this);
@@ -597,13 +597,11 @@ namespace Radegast
         public frmMain MainForm { get; }
         public TabsConsole TabConsole => MainForm.TabConsole;
 
-        public void HandleThreadException(object sender, ThreadExceptionEventArgs e)
+        static void HandleThreadException(GLib.UnhandledExceptionArgs args)
         {
-            Logger.Log("Unhandled thread exception: "
-                + e.Exception.Message + Environment.NewLine
-                + e.Exception.StackTrace + Environment.NewLine,
-                Helpers.LogLevel.Error,
-                Client);
+            Logger.Log($"Unhandled thread exception: {args.ExceptionObject}",
+                Helpers.LogLevel.Error);
+            args.ExitApplication = false;
         }
 
         #region Crash reporting
@@ -696,7 +694,8 @@ namespace Radegast
 
         void CopyObjectUUIDHandler(object sender, EventArgs e)
         {
-            if (MainForm.InvokeRequired)
+            // *FIXME: Fix clipboard
+            /*if (MainForm.InvokeRequired)
             {
                 if (MainForm.IsHandleCreated || !MonoRuntime)
                 {
@@ -705,7 +704,7 @@ namespace Radegast
                 return;
             }
 
-            Clipboard.SetText(((Primitive)sender).ID.ToString());
+            Clipboard.SetText(((Primitive)sender).ID.ToString());*/
         }
 
         #endregion Context Actions

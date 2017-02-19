@@ -29,12 +29,11 @@
 // $Id$
 //
 using System;
-using System.Windows.Forms;
-using System.Text.RegularExpressions;
 using System.IO;
 using System.Reflection;
 using CommandLine;
 using CommandLine.Text;
+using Gtk;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
@@ -125,9 +124,6 @@ namespace Radegast
             // Change current working directory to Radegast install dir
             Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-
             // See if we only wanted to display list of grids
             if (CommandLine.ListGrids)
             {
@@ -147,8 +143,16 @@ namespace Radegast
             }
 
             // Create main Radegast instance
-            RadegastInstance instance = RadegastInstance.GlobalInstance;
-            Application.Run(instance.MainForm);
+            Application.Init();
+            //RadegastInstance instance = RadegastInstance.GlobalInstance;
+            Window mainWin = new Window("Radegast");
+            mainWin.Resize(500, 400);
+            Label label = new Label();
+            label.Text = "Hello!";
+            mainWin.Add(label);
+            mainWin.ShowAll();
+
+            Application.Run();
             OpenMetaverse.WorkPool.Shutdown();
         }
 
@@ -186,13 +190,13 @@ namespace Radegast
                     string dlgMsg = "Radegast has encoutered an unrecoverable errror." + Environment.NewLine +
                         "Would you like to send the error report to help improve Radegast?";
 
-                    var res = MessageBox.Show(dlgMsg, "Unrecoverable error", MessageBoxButtons.YesNo, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1);
+                    /*var res = MessageBox.Show(dlgMsg, "Unrecoverable error", MessageBoxButtons.YesNo, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1);
 
                     if (res == DialogResult.Yes)
                     {
                         var reporter = new ErrorReporter("http://api.radegast.org/svc/error_report");
                         reporter.SendExceptionReport(e);
-                    }
+                    }*/
 
                     Environment.Exit(1);
                 }

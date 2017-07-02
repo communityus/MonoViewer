@@ -1,0 +1,41 @@
+init:
+  - ps: if ($env:APPVEYOR_REPO_TAG -eq "true") { $env:TAG_VERSION = "$env:APPVEYOR_REPO_TAG_NAME.$env:APPVEYOR_BUILD_NUMBER" } else { $env:TAG_VERSION = "v2.24.$env:APPVEYOR_BUILD_NUMBER-alpha" }
+  - ps: $env:TAG_VERSION = $env:TAG_VERSION -replace 'v',''
+  - ps: Write-Host "Setting version to '$env:TAG_VERSION'"
+  - ps: Update-AppveyorBuild -Version "$env:TAG_VERSION"
+
+image: Visual Studio 2017
+
+configuration: Release
+
+platform: x86
+
+pull_requests:
+  do_not_increment_build_number: true
+
+build:
+  project: radegast.sln
+  parallel: true
+  verbosity: minimal
+
+after_build:
+  - cmd: '"C:\Program Files (x86)\NSIS\makensis.exe" bin\Radegast.nsi'
+
+artifacts:
+  - path: 'Radegast-*-installer.exe'
+    name: 'Radegast Installer'
+    type: Auto
+
+cache:
+  - packages -> **\packages.config
+  - '%LocalAppData%\NuGet\Cache'
+
+assembly_info:
+  patch: true
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+
+before_build:
+  - nuget restore radegast.sln
+

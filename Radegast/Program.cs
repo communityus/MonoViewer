@@ -45,43 +45,45 @@ using System.Threading;
 
 namespace Radegast
 {
-    public class CommandLine
+    public class CommandLineOpts
     {
-        [Option("u", "username", HelpText = "Username, use quotes to supply \"First Last\"")]
-        public string Username = string.Empty;
+        [Option('u', "username", HelpText = "Username, use quotes to supply \"First Last\"")]
+        public string Username { get; set; } = string.Empty;
 
-        [Option("p", "password", HelpText = "Account password")]
-        public string Password = string.Empty;
+        [Option('p', "password", HelpText = "Account password")]
+        public string Password { get; set; } = string.Empty;
 
-        [Option("a", "autologin", HelpText = "Automatially login with provided user credentials")]
-        public bool AutoLogin = false;
+        [Option('a', "autologin", HelpText = "Automatially login with provided user credentials")]
+        public bool AutoLogin { get; set; } = false;
 
-        [Option("g", "grid", HelpText = "Grid ID to login into, try --list-grids to see IDs used for this parameter")]
-        public string Grid = string.Empty;
+        [Option('g', "grid", HelpText = "Grid ID to login into, try --list-grids to see IDs used for this parameter")]
+        public string Grid { get; set; } = string.Empty;
 
-        [Option("l", "location", HelpText = "Login location: last, home or regionname. Regioname can also be in format regionname/x/y/z")]
-        public string Location = string.Empty;
+        [Option('l', "location", HelpText = "Login location: last, home or regionname. Regioname can also be in format regionname/x/y/z")]
+        public string Location { get; set; } = string.Empty;
 
-        [Option(null, "list-grids", HelpText = "Lists grid IDs used for --grid option")]
-        public bool ListGrids = false;
+        [Option("list-grids", HelpText = "Lists grid IDs used for --grid option")]
+        public bool ListGrids { get; set; } = false;
 
-        [Option(null, "loginuri", HelpText = "Use this URI to login (don't use with --grid)")]
-        public string LoginUri = string.Empty;
+        [Option("loginuri", HelpText = "Use this URI to login (don't use with --grid)")]
+        public string LoginUri { get; set; } = string.Empty;
 
-        [Option(null, "no-sound", HelpText = "Disable sound")]
-        public bool DisableSound = false;
+        [Option("no-sound", HelpText = "Disable sound")]
+        public bool DisableSound { get; set; } = false;
 
 
         public HelpText GetHeader()
         {
-            HelpText header = new HelpText(Properties.Resources.RadegastTitle);
-            header.AdditionalNewLineAfterOption = true;
-            header.Copyright = new CopyrightInfo("Radegast Development Team", 2009, 2014);
-            header.AddPreOptionsLine("http://radegast.org/");
+            HelpText header = new HelpText(Properties.Resources.RadegastTitle)
+            {
+                AdditionalNewLineAfterOption = true,
+                Copyright = new CopyrightInfo("Radegast Development Team", 2009, 2017)
+            };
+            header.AddPreOptionsLine("https://radegast.life/");
             return header;
         }
 
-        [HelpOption("h", "help", HelpText = "Display this help screen.")]
+        [HelpOption('h', "help", HelpText = "Display this help screen.")]
         public string GetUsage()
         {
             HelpText usage = GetHeader();
@@ -97,10 +99,12 @@ namespace Radegast
         /// <summary>
         /// Parsed command line options
         /// </summary>
-        public static CommandLine CommandLine;
+        public static CommandLineOpts CommandLineOpts;
 
         static void RunRadegast(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
             // Increase the number of IOCP threads available. Mono defaults to a tragically low number
             int workerThreads, iocpThreads;
             ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
@@ -113,12 +117,8 @@ namespace Radegast
             }
 
             // Read command line options
-            CommandLine = new CommandLine();
-            CommandLineParser parser = new CommandLineParser(new CommandLineParserSettings(Console.Error));
-            if (!parser.ParseArguments(args, CommandLine))
-            {
-                Environment.Exit(1);
-            }
+            CommandLineOpts = new CommandLineOpts();
+            CommandLine.Parser.Default.ParseArguments(args, CommandLineOpts);
 
             // Change current working directory to Radegast install dir
 			string myLoc = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -131,9 +131,9 @@ namespace Radegast
             Application.SetCompatibleTextRenderingDefault(false);
 
             // See if we only wanted to display list of grids
-            if (CommandLine.ListGrids)
+            if (CommandLineOpts.ListGrids)
             {
-                Console.WriteLine(CommandLine.GetHeader());
+                Console.WriteLine(CommandLineOpts.GetHeader());
                 Console.WriteLine();
                 GridManager grids = new GridManager();
                 Console.WriteLine("Use Grid ID as the parameter for --grid");
@@ -151,6 +151,13 @@ namespace Radegast
             // Create main Radegast instance
             RadegastInstance instance = RadegastInstance.GlobalInstance;
             Application.Run(instance.MainForm);
+            OpenMetaverse.WorkPool.Shutdown();
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var instance = RadegastInstance.GlobalInstance;
+            instance.Client.Network.Logout();
             OpenMetaverse.WorkPool.Shutdown();
         }
 

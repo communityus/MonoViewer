@@ -2,10 +2,9 @@
 *.suo
 bin
 obj
+packages
 compile.bat
-*.sln
 *.sln.cache
-*.csproj
 *.bak
 *.resources
 *~
@@ -14,3 +13,4 @@ compile.bat
 .DS_Store
 *.userprefs
 Radegast.app/Contents/Resources/*
+.idea

@@ -211,6 +211,8 @@ namespace Radegast.Rendering
             Client.Appearance.AppearanceSet += new EventHandler<AppearanceSetEventArgs>(Appearance_AppearanceSet);
             Instance.Netcom.ClientDisconnected += new EventHandler<DisconnectedEventArgs>(Netcom_ClientDisconnected);
             Application.Idle += new EventHandler(Application_Idle);
+
+            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void DisposeInternal()
@@ -1068,17 +1070,17 @@ namespace Radegast.Rendering
                         isMask = true;
 
                         // Do we really have alpha, is it all full alpha, or is it a mask
-                        for (int i = 0; i < mi.Alpha.Length; i++)
+                        foreach (byte b in mi.Alpha)
                         {
-                            if (mi.Alpha[i] < 255)
+                            if (b < 255)
                             {
                                 hasAlpha = true;
                             }
-                            if (mi.Alpha[i] != 0)
+                            if (b != 0)
                             {
                                 fullAlpha = false;
                             }
-                            if (mi.Alpha[i] != 0 && mi.Alpha[i] != 255)
+                            if (b != 0 && b != 255)
                             {
                                 isMask = false;
                             }
@@ -1287,11 +1289,7 @@ namespace Radegast.Rendering
             {
                 return parent;
             }
-            else if (Avatars.TryGetValue(localID, out avi))
-            {
-                return avi;
-            }
-            return null;
+            return Avatars.TryGetValue(localID, out avi) ? avi : null;
         }
 
         /// <summary>
@@ -1385,7 +1383,6 @@ namespace Radegast.Rendering
                     rot *= obj.BasePrim.Rotation;
 
                 }
-                return;
             }
         }
 
@@ -1433,10 +1430,8 @@ namespace Radegast.Rendering
             // This is a FIR filter known as a MMA or Modified Mean Average, using a 20 point sampling width
             advTimerTick = ((19 * advTimerTick) + lastFrameTime) / 20;
             // Stats in window title for now
-            Text = String.Format("Scene Viewer: FPS {0:000.00} Texture decode queue: {1}, Sculpt queue: {2}",
-                1d / advTimerTick,
-                PendingTextures.Count,
-                PendingTasks.Count);
+            Text =
+                $"Scene Viewer: FPS {1d/advTimerTick:000.00} Texture decode queue: {PendingTextures.Count}, Sculpt queue: {PendingTasks.Count}";
 
 #if TURNS_OUT_PRINTER_IS_EXPENISVE
             int posX = glControl.Width - 100;
@@ -1723,7 +1718,7 @@ namespace Radegast.Rendering
 
                     GL.MultMatrix(Math3D.CreateSRTMatrix(Vector3.One, av.RenderRotation, av.RenderPosition - avataroffset * av.RenderRotation));
 
-                    GL.Begin(BeginMode.Lines);
+                    GL.Begin(PrimitiveType.Lines);
 
                     GL.Color3(1.0, 0.0, 0.0);
 
@@ -1889,7 +1884,7 @@ namespace Radegast.Rendering
                             GL.VertexPointer(3, VertexPointerType.Float, 0, mesh.RenderData.Vertices);
                             GL.NormalPointer(NormalPointerType.Float, 0, mesh.MorphRenderData.Normals);
 
-                            GL.DrawElements(BeginMode.Triangles, mesh.RenderData.Indices.Length, DrawElementsType.UnsignedShort, mesh.RenderData.Indices);
+                            GL.DrawElements(PrimitiveType.Triangles, mesh.RenderData.Indices.Length, DrawElementsType.UnsignedShort, mesh.RenderData.Indices);
 
                             GL.BindTexture(TextureTarget.Texture2D, 0);
 
@@ -2112,7 +2107,7 @@ namespace Radegast.Rendering
             // If the sphere is too small, just render a OpenGL point instead.
             if (p < 4 || r <= 0)
             {
-                GL.Begin(BeginMode.Points);
+                GL.Begin(PrimitiveType.Points);
                 GL.Vertex3(cx, cy, cz);
                 GL.End();
                 return;
@@ -2123,7 +2118,7 @@ namespace Radegast.Rendering
                 theta1 = i * TWOPI / p - PIDIV2;
                 theta2 = (i + 1) * TWOPI / p - PIDIV2;
 
-                GL.Begin(BeginMode.TriangleStrip);
+                GL.Begin(PrimitiveType.TriangleStrip);
                 {
                     for (int j = 0; j <= p; ++j)
                     {
@@ -2290,12 +2285,12 @@ namespace Radegast.Rendering
 
             if (RenderSettings.UseVBO && !occludedVBOFailed)
             {
-                GL.DrawElements(BeginMode.Quads, RHelp.CubeIndices.Length, DrawElementsType.UnsignedShort, IntPtr.Zero);
+                GL.DrawElements(PrimitiveType.Quads, RHelp.CubeIndices.Length, DrawElementsType.UnsignedShort, IntPtr.Zero);
             }
             else
             {
                 GL.VertexPointer(3, VertexPointerType.Float, 0, RHelp.CubeVertices);
-                GL.DrawElements(BeginMode.Quads, RHelp.CubeIndices.Length, DrawElementsType.UnsignedShort, RHelp.CubeIndices);
+                GL.DrawElements(PrimitiveType.Quads, RHelp.CubeIndices.Length, DrawElementsType.UnsignedShort, RHelp.CubeIndices);
             }
             GL.PopMatrix();
         }

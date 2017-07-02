@@ -99,6 +99,8 @@ namespace Radegast
             invRootNode = AddDir(null, Inventory.RootFolder);
             UpdateStatus("Reading cache");
             Init1();
+
+            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         public void Init1()
@@ -141,15 +143,19 @@ namespace Radegast
             {
                 invTree.BackColor = Color.FromKnownColor(KnownColor.Window);
                 invTree.ForeColor = invTree.LineColor = Color.FromKnownColor(KnownColor.WindowText);
-                InventoryFolder f = new InventoryFolder(UUID.Random());
-                f.Name = "";
-                f.ParentUUID = UUID.Zero;
-                f.PreferredType = FolderType.None;
-                TreeNode dirNode = new TreeNode();
-                dirNode.Name = f.UUID.ToString();
-                dirNode.Text = f.Name;
-                dirNode.Tag = f;
-                dirNode.ImageIndex = GetDirImageIndex(f.PreferredType.ToString().ToLower());
+                InventoryFolder f = new InventoryFolder(UUID.Random())
+                {
+                    Name = "",
+                    ParentUUID = UUID.Zero,
+                    PreferredType = FolderType.None
+                };
+                TreeNode dirNode = new TreeNode
+                {
+                    Name = f.UUID.ToString(),
+                    Text = f.Name,
+                    Tag = f,
+                    ImageIndex = GetDirImageIndex(f.PreferredType.ToString().ToLower())
+                };
                 dirNode.SelectedImageIndex = dirNode.ImageIndex;
                 invTree.Nodes.Add(dirNode);
                 invTree.Sort();
@@ -247,54 +253,53 @@ namespace Radegast
 
             for (int i = 0; i < prim.NameValues.Length; i++)
             {
-                if (prim.NameValues[i].Name == "AttachItemID")
+                if (prim.NameValues[i].Name != "AttachItemID") continue;
+
+                AttachmentInfo attachment = new AttachmentInfo();
+                attachment.Prim = prim;
+                attachment.InventoryID = new UUID(prim.NameValues[i].Value.ToString());
+                attachment.PrimID = prim.ID;
+
+                lock (attachments)
                 {
-                    AttachmentInfo attachment = new AttachmentInfo();
-                    attachment.Prim = prim;
-                    attachment.InventoryID = new UUID(prim.NameValues[i].Value.ToString());
-                    attachment.PrimID = prim.ID;
-
-                    lock (attachments)
+                    // Add new attachment info
+                    if (!attachments.ContainsKey(attachment.InventoryID))
                     {
-                        // Add new attachment info
-                        if (!attachments.ContainsKey(attachment.InventoryID))
-                        {
-                            attachments.Add(attachment.InventoryID, attachment);
+                        attachments.Add(attachment.InventoryID, attachment);
 
+                    }
+                    else
+                    {
+                        attachment = attachments[attachment.InventoryID];
+                        if (attachment.Prim == null)
+                        {
+                            attachment.Prim = prim;
+                        }
+                    }
+
+                    // Don't update the tree yet if we're still updating invetory tree from server
+                    if (!TreeUpdateInProgress)
+                    {
+                        if (Inventory.Contains(attachment.InventoryID))
+                        {
+                            if (attachment.Item == null)
+                            {
+                                InventoryItem item = (InventoryItem)Inventory[attachment.InventoryID];
+                                attachment.Item = item;
+                            }
+                            if (!attachment.MarkedAttached)
+                            {
+                                attachment.MarkedAttached = true;
+                                UpdateNodeLabel(attachment.InventoryID);
+                            }
                         }
                         else
                         {
-                            attachment = attachments[attachment.InventoryID];
-                            if (attachment.Prim == null)
-                            {
-                                attachment.Prim = prim;
-                            }
-                        }
-
-                        // Don't update the tree yet if we're still updating invetory tree from server
-                        if (!TreeUpdateInProgress)
-                        {
-                            if (Inventory.Contains(attachment.InventoryID))
-                            {
-                                if (attachment.Item == null)
-                                {
-                                    InventoryItem item = (InventoryItem)Inventory[attachment.InventoryID];
-                                    attachment.Item = item;
-                                }
-                                if (!attachment.MarkedAttached)
-                                {
-                                    attachment.MarkedAttached = true;
-                                    UpdateNodeLabel(attachment.InventoryID);
-                                }
-                            }
-                            else
-                            {
-                                client.Inventory.RequestFetchInventory(attachment.InventoryID, client.Self.AgentID);
-                            }
+                            client.Inventory.RequestFetchInventory(attachment.InventoryID, client.Self.AgentID);
                         }
                     }
-                    break;
                 }
+                break;
             }
         }
 
@@ -507,11 +512,13 @@ namespace Radegast
 
         TreeNode AddDir(TreeNode parentNode, InventoryFolder f)
         {
-            TreeNode dirNode = new TreeNode();
-            dirNode.Name = f.UUID.ToString();
-            dirNode.Text = f.Name;
-            dirNode.Tag = f;
-            dirNode.ImageIndex = GetDirImageIndex(f.PreferredType.ToString().ToLower());
+            TreeNode dirNode = new TreeNode
+            {
+                Name = f.UUID.ToString(),
+                Text = f.Name,
+                Tag = f,
+                ImageIndex = GetDirImageIndex(f.PreferredType.ToString().ToLower())
+            };
             dirNode.SelectedImageIndex = dirNode.ImageIndex;
             if (parentNode == null)
             {
@@ -531,10 +538,12 @@ namespace Radegast
 
         TreeNode AddItem(TreeNode parent, InventoryItem item)
         {
-            TreeNode itemNode = new TreeNode();
-            itemNode.Name = item.UUID.ToString();
-            itemNode.Text = ItemLabel(item, false);
-            itemNode.Tag = item;
+            TreeNode itemNode = new TreeNode
+            {
+                Name = item.UUID.ToString(),
+                Text = ItemLabel(item, false),
+                Tag = item
+            };
             int img = -1;
             InventoryItem linkedItem = null;
 
@@ -602,7 +611,8 @@ namespace Radegast
             {
                 foreach (TreeNode child in node.Nodes)
                 {
-                    removeNode(child);
+                    if (child != null)
+                        removeNode(child);
                 }
 
                 lock (UUID2NodeCache)
@@ -704,16 +714,7 @@ namespace Radegast
 
         private void TraverseNodes(InventoryNode start)
         {
-            bool has_items = false;
-
-            foreach (InventoryNode node in start.Nodes.Values)
-            {
-                if (node.Data is InventoryItem)
-                {
-                    has_items = true;
-                    break;
-                }
-            }
+            bool has_items = start.Nodes.Values.Any(node => node.Data is InventoryItem);
 
             if (!has_items || start.NeedsUpdate)
             {
@@ -740,7 +741,9 @@ namespace Radegast
 
                 if (!success)
                 {
-                    Logger.Log(string.Format("Failed fetching folder {0}, got {1} items out of {2}", f.Name, Inventory.Items[f.UUID].Nodes.Count, ((InventoryFolder)Inventory.Items[f.UUID].Data).DescendentCount), Helpers.LogLevel.Error, client);
+                    Logger.Log(
+                        $"Failed fetching folder {f.Name}, got {Inventory.Items[f.UUID].Nodes.Count} items out of {((InventoryFolder) Inventory.Items[f.UUID].Data).DescendentCount}",
+                        Helpers.LogLevel.Error, client);
                 }
             }
 
@@ -789,9 +792,9 @@ namespace Radegast
                 }
                 TraverseAndQueueNodes(Inventory.RootNode);
                 if (QueuedFolders.Count == 0) break;
-                Logger.DebugLog(string.Format("Queued {0} folders for update", QueuedFolders.Count));
+                Logger.DebugLog($"Queued {QueuedFolders.Count} folders for update");
 
-                Parallel.ForEach<UUID>(Math.Min(QueuedFolders.Count, 6), QueuedFolders, folderID =>
+                System.Threading.Tasks.Parallel.ForEach<UUID>(QueuedFolders, folderID =>
                 {
                     bool success = false;
 
@@ -840,19 +843,17 @@ namespace Radegast
             {
                 foreach (AttachmentInfo a in attachments.Values)
                 {
-                    if (a.Item == null)
+                    if (a.Item != null) continue;
+                    if (Inventory.Contains(a.InventoryID))
                     {
-                        if (Inventory.Contains(a.InventoryID))
-                        {
-                            a.MarkedAttached = true;
-                            a.Item = (InventoryItem)Inventory[a.InventoryID];
-                            UpdateNodeLabel(a.InventoryID);
-                        }
-                        else
-                        {
-                            client.Inventory.RequestFetchInventory(a.InventoryID, client.Self.AgentID);
-                            return;
-                        }
+                        a.MarkedAttached = true;
+                        a.Item = (InventoryItem)Inventory[a.InventoryID];
+                        UpdateNodeLabel(a.InventoryID);
+                    }
+                    else
+                    {
+                        client.Inventory.RequestFetchInventory(a.InventoryID, client.Self.AgentID);
+                        return;
                     }
                 }
             }
@@ -968,14 +969,7 @@ namespace Radegast
             txtCreator.Tag = item.CreatorID;
             txtCreated.Text = item.CreationDate.ToString();
 
-            if (item.AssetUUID != UUID.Zero)
-            {
-                txtAssetID.Text = item.AssetUUID.ToString();
-            }
-            else
-            {
-                txtAssetID.Text = String.Empty;
-            }
+            txtAssetID.Text = item.AssetUUID != UUID.Zero ? item.AssetUUID.ToString() : string.Empty;
 
             txtInvID.Text = item.UUID.ToString();
 
@@ -1042,7 +1036,7 @@ namespace Radegast
         void cbNextOwnerUpdate_CheckedChanged(object sender, EventArgs e)
         {
             InventoryItem item = null;
-            if (pnlItemProperties.Tag != null && pnlItemProperties.Tag is InventoryItem)
+            if (pnlItemProperties.Tag is InventoryItem)
             {
                 item = (InventoryItem)pnlItemProperties.Tag;
             }
@@ -1061,7 +1055,7 @@ namespace Radegast
         private void txtItemName_Leave(object sender, EventArgs e)
         {
             InventoryItem item = null;
-            if (pnlItemProperties.Tag != null && pnlItemProperties.Tag is InventoryItem)
+            if (pnlItemProperties.Tag is InventoryItem)
             {
                 item = (InventoryItem)pnlItemProperties.Tag;
             }
@@ -1076,7 +1070,7 @@ namespace Radegast
         private void txtItemDescription_Leave(object sender, EventArgs e)
         {
             InventoryItem item = null;
-            if (pnlItemProperties.Tag != null && pnlItemProperties.Tag is InventoryItem)
+            if (pnlItemProperties.Tag is InventoryItem)
             {
                 item = (InventoryItem)pnlItemProperties.Tag;
             }
@@ -1090,61 +1084,59 @@ namespace Radegast
 
         void invTree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            if (invTree.SelectedNode.Tag is InventoryItem)
+            if (!(invTree.SelectedNode.Tag is InventoryItem)) return;
+            InventoryItem item = invTree.SelectedNode.Tag as InventoryItem;
+            item = instance.COF.RealInventoryItem(item);
+
+            switch (item.AssetType)
             {
-                InventoryItem item = invTree.SelectedNode.Tag as InventoryItem;
-                item = instance.COF.RealInventoryItem(item);
 
-                switch (item.AssetType)
-                {
+                case AssetType.Landmark:
+                    instance.TabConsole.DisplayNotificationInChat("Teleporting to " + item.Name);
+                    client.Self.RequestTeleport(item.AssetUUID);
+                    break;
 
-                    case AssetType.Landmark:
-                        instance.TabConsole.DisplayNotificationInChat("Teleporting to " + item.Name);
-                        client.Self.RequestTeleport(item.AssetUUID);
-                        break;
+                case AssetType.Gesture:
+                    client.Self.PlayGesture(item.AssetUUID);
+                    break;
 
-                    case AssetType.Gesture:
-                        client.Self.PlayGesture(item.AssetUUID);
-                        break;
+                case AssetType.Notecard:
+                    Notecard note = new Notecard(instance, (InventoryNotecard)item);
+                    note.Dock = DockStyle.Fill;
+                    note.ShowDetached();
+                    break;
 
-                    case AssetType.Notecard:
-                        Notecard note = new Notecard(instance, (InventoryNotecard)item);
-                        note.Dock = DockStyle.Fill;
-                        note.ShowDetached();
-                        break;
+                case AssetType.LSLText:
+                    ScriptEditor script = new ScriptEditor(instance, (InventoryLSL)item);
+                    script.Dock = DockStyle.Fill;
+                    script.ShowDetached();
+                    break;
 
-                    case AssetType.LSLText:
-                        ScriptEditor script = new ScriptEditor(instance, (InventoryLSL)item);
-                        script.Dock = DockStyle.Fill;
-                        script.ShowDetached();
-                        break;
+                case AssetType.Object:
+                    if (IsAttached(item))
+                    {
+                        instance.COF.Detach(item);
+                    }
+                    else
+                    {
+                        instance.COF.Attach(item, AttachmentPoint.Default, true);
+                    }
+                    break;
 
-                    case AssetType.Object:
-                        if (IsAttached(item))
+                case AssetType.Bodypart:
+                case AssetType.Clothing:
+                    if (IsWorn(item))
+                    {
+                        if (item.AssetType == AssetType.Clothing)
                         {
-                            instance.COF.Detach(item);
+                            instance.COF.RemoveFromOutfit(item);
                         }
-                        else
-                        {
-                            instance.COF.Attach(item, AttachmentPoint.Default, true);
-                        }
-                        break;
-
-                    case AssetType.Bodypart:
-                    case AssetType.Clothing:
-                        if (IsWorn(item))
-                        {
-                            if (item.AssetType == AssetType.Clothing)
-                            {
-                                instance.COF.RemoveFromOutfit(item);
-                            }
-                        }
-                        else
-                        {
-                            instance.COF.AddToOutfit(item, true);
-                        }
-                        break;
-                }
+                    }
+                    else
+                    {
+                        instance.COF.AddToOutfit(item, true);
+                    }
+                    break;
             }
         }
 
@@ -1188,7 +1180,7 @@ namespace Radegast
 
         public bool IsAttached(InventoryItem item)
         {
-            List<Primitive> myAtt = client.Network.CurrentSim.ObjectsPrimitives.FindAll((Primitive p) => p.ParentID == client.Self.LocalID);
+            var myAtt = client.Network.CurrentSim.ObjectsPrimitives.FindAll(p => p.ParentID == client.Self.LocalID);
             foreach (Primitive prim in myAtt)
             {
                 if (prim.NameValues == null) continue;
@@ -1205,18 +1197,19 @@ namespace Radegast
                 {
                     lock (attachments)
                     {
-                        AttachmentInfo inf = new AttachmentInfo();
-                        inf.InventoryID = item.UUID;
-                        inf.Item = item;
-                        inf.MarkedAttached = true;
-                        inf.Prim = prim;
-                        inf.PrimID = prim.ID;
+                        AttachmentInfo inf = new AttachmentInfo
+                        {
+                            InventoryID = item.UUID,
+                            Item = item,
+                            MarkedAttached = true,
+                            Prim = prim,
+                            PrimID = prim.ID
+                        };
                         attachments[invID] = inf;
                     }
                     return true;
                 }
             }
-
             return false;
         }
 
@@ -1224,7 +1217,7 @@ namespace Radegast
         {
             lock (attachments)
             {
-                foreach (KeyValuePair<UUID, AttachmentInfo> att in attachments)
+                foreach (var att in attachments)
                 {
                     if (att.Value.Point == point)
                     {
@@ -1282,18 +1275,9 @@ namespace Radegast
 
         public static bool IsFullPerm(InventoryItem item)
         {
-            if (
-                ((item.Permissions.OwnerMask & PermissionMask.Modify) != 0) &&
-                ((item.Permissions.OwnerMask & PermissionMask.Copy) != 0) &&
-                ((item.Permissions.OwnerMask & PermissionMask.Transfer) != 0)
-                )
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return ((item.Permissions.OwnerMask & PermissionMask.Modify) != 0) &&
+                   ((item.Permissions.OwnerMask & PermissionMask.Copy) != 0) &&
+                   ((item.Permissions.OwnerMask & PermissionMask.Transfer) != 0);
         }
 
         void invTree_MouseClick(object sender, TreeNodeMouseClickEventArgs e)
@@ -1653,7 +1637,7 @@ namespace Radegast
         #region Context menu folder
         private void OnInvContextClick(object sender, EventArgs e)
         {
-            if (invTree.SelectedNode == null || !(invTree.SelectedNode.Tag is InventoryBase))
+            if (!(invTree.SelectedNode?.Tag is InventoryBase))
             {
                 return;
             }
@@ -1970,7 +1954,7 @@ namespace Radegast
 
             instance.TabConsole.DisplayNotificationInChat("New notecard created, enter notecard name and press enter", ChatBufferTextStyle.Invisible);
             var node = findNodeForItem(item.ParentUUID);
-            if (node != null) node.Expand();
+            node?.Expand();
             node = findNodeForItem(item.UUID);
             if (node != null)
             {
@@ -1995,7 +1979,7 @@ namespace Radegast
 
             instance.TabConsole.DisplayNotificationInChat("New script created, enter script name and press enter", ChatBufferTextStyle.Invisible);
             var node = findNodeForItem(item.ParentUUID);
-            if (node != null) node.Expand();
+            node?.Expand();
             node = findNodeForItem(item.UUID);
             if (node != null)
             {
@@ -2074,7 +2058,7 @@ namespace Radegast
 
             if (dest == null) return;
 
-            client.Inventory.CreateLink(dest.UUID, instance.InventoryClipboard.Item, (bool success, InventoryItem item) => { });
+            client.Inventory.CreateLink(dest.UUID, instance.InventoryClipboard.Item, (success, item) => { });
         }
 
         #endregion
@@ -2111,25 +2095,23 @@ namespace Radegast
         void TreeView_AfterExpand(object sender, TreeViewEventArgs e)
         {
             // Check if we need to go into edit mode for new items
-            if (newItemName != string.Empty)
+            if (newItemName == string.Empty) return;
+            foreach (TreeNode n in e.Node.Nodes)
             {
-                foreach (TreeNode n in e.Node.Nodes)
+                if (n.Name == newItemName)
                 {
-                    if (n.Name == newItemName)
-                    {
-                        n.BeginEdit();
-                        break;
-                    }
+                    n.BeginEdit();
+                    break;
                 }
-                newItemName = string.Empty;
             }
+            newItemName = string.Empty;
         }
 
         private bool _EditingNode = false;
 
         private void OnLabelEditTimer(object sender)
         {
-            if (_EditNode == null || !(_EditNode.Tag is InventoryBase))
+            if (!(_EditNode?.Tag is InventoryBase))
                 return;
 
             if (InvokeRequired)
@@ -2149,12 +2131,9 @@ namespace Radegast
 
         private void invTree_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
         {
-            if (e.Node == null ||
-                !(e.Node.Tag is InventoryBase) ||
-                (e.Node.Tag is InventoryFolder &&
-                ((InventoryFolder)e.Node.Tag).PreferredType != FolderType.None &&
-                ((InventoryFolder)e.Node.Tag).PreferredType != FolderType.Outfit)
-                )
+            if (!(e.Node?.Tag is InventoryBase) || (e.Node.Tag is InventoryFolder &&
+                 ((InventoryFolder)e.Node.Tag).PreferredType != FolderType.None &&
+                 ((InventoryFolder)e.Node.Tag).PreferredType != FolderType.Outfit))
             {
                 e.CancelEdit = true;
                 return;
@@ -2806,22 +2785,8 @@ namespace Radegast
         public InventoryItem Item;
         public UUID InventoryID;
         public UUID PrimID;
-        public bool MarkedAttached = false;
-
-        public AttachmentPoint Point
-        {
-            get
-            {
-                if (Prim != null)
-                {
-                    return Prim.PrimData.AttachmentPoint;
-                }
-                else
-                {
-                    return AttachmentPoint.Default;
-                }
-            }
-        }
+        public bool MarkedAttached;
+        public AttachmentPoint Point => Prim != null ? Prim.PrimData.AttachmentPoint : AttachmentPoint.Default;
     }
 
 

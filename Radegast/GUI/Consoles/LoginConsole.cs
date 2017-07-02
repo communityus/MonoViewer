@@ -30,6 +30,7 @@
 //
 using System;
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -62,10 +63,11 @@ namespace Radegast
 
             instance.GlobalSettings.OnSettingChanged += new Settings.SettingChangedCallback(GlobalSettings_OnSettingChanged);
 
-            lblVersion.Text = Properties.Resources.RadegastTitle + "." + RadegastBuild.CurrentRev;
+            lblVersion.Text = Properties.Resources.RadegastTitle + " " + Assembly.GetExecutingAssembly().GetName().Version;
 
             Load += new EventHandler(LoginConsole_Load);
 
+            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         private void MainConsole_Disposed(object sender, EventArgs e)
@@ -76,8 +78,10 @@ namespace Radegast
 
         void LoginConsole_Load(object sender, EventArgs e)
         {
-            if (instance.PlainColors)
+            if (!instance.GlobalSettings["theme_compatibility_mode"] && instance.PlainColors)
+            {
                 panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(210)))), ((int)(((byte)(225)))));
+            }
 
             cbxLocation.SelectedIndex = 0;
             cbxUsername.SelectedIndexChanged += cbxUsername_SelectedIndexChanged;
@@ -196,7 +200,7 @@ namespace Radegast
             for (int i = 0; i < instance.GridManger.Count; i++)
             {
                 cbxGrid.Items.Add(instance.GridManger[i]);
-                if (MainProgram.CommandLine.Grid == instance.GridManger[i].ID)
+                if (MainProgram.CommandLineOpts.Grid == instance.GridManger[i].ID)
                     gridIx = i;
             }
             cbxGrid.Items.Add("Custom");
@@ -213,13 +217,13 @@ namespace Radegast
             // Setup login name
             string savedUsername;
 
-            if (string.IsNullOrEmpty(MainProgram.CommandLine.Username))
+            if (string.IsNullOrEmpty(MainProgram.CommandLineOpts.Username))
             {
                 savedUsername = s["username"];
             }
             else
             {
-                savedUsername = MainProgram.CommandLine.Username;
+                savedUsername = MainProgram.CommandLineOpts.Username;
             }
 
             cbxUsername.Items.Add(savedUsername);
@@ -245,19 +249,19 @@ namespace Radegast
             cbxUsername.SelectedIndex = 0;
 
             // Fill in saved password or use one specified on the command line
-            if (string.IsNullOrEmpty(MainProgram.CommandLine.Password))
+            if (string.IsNullOrEmpty(MainProgram.CommandLineOpts.Password))
             {
                 txtPassword.Text = s["password"].AsString();
             }
             else
             {
-                txtPassword.Text = MainProgram.CommandLine.Password;
+                txtPassword.Text = MainProgram.CommandLineOpts.Password;
             }
 
 
             // Setup login location either from the last used or
             // override from the command line
-            if (string.IsNullOrEmpty(MainProgram.CommandLine.Location))
+            if (string.IsNullOrEmpty(MainProgram.CommandLineOpts.Location))
             {
                 // Use last location as default
                 if (s["login_location_type"].Type == OSDType.Unknown)
@@ -273,7 +277,7 @@ namespace Radegast
             }
             else
             {
-                switch (MainProgram.CommandLine.Location)
+                switch (MainProgram.CommandLineOpts.Location)
                 {
                     case "home":
                         cbxLocation.SelectedIndex = 0;
@@ -285,20 +289,20 @@ namespace Radegast
 
                     default:
                         cbxLocation.SelectedIndex = -1;
-                        cbxLocation.Text = MainProgram.CommandLine.Location;
+                        cbxLocation.Text = MainProgram.CommandLineOpts.Location;
                         break;
                 }
             }
 
 
             // Set grid dropdown to last used, or override from command line
-            if (string.IsNullOrEmpty(MainProgram.CommandLine.Grid))
+            if (string.IsNullOrEmpty(MainProgram.CommandLineOpts.Grid))
             {
                 cbxGrid.SelectedIndex = s["login_grid"].AsInteger();
             }
             else if (gridIx == -1) // --grid specified but not found
             {
-                MessageBox.Show(string.Format("Grid specified with --grid {0} not found", MainProgram.CommandLine.Grid),
+                MessageBox.Show(string.Format("Grid specified with --grid {0} not found", MainProgram.CommandLineOpts.Grid),
                     "Grid not found",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning
@@ -306,18 +310,18 @@ namespace Radegast
             }
 
             // Restore login uri from settings, or command line
-            if (string.IsNullOrEmpty(MainProgram.CommandLine.LoginUri))
+            if (string.IsNullOrEmpty(MainProgram.CommandLineOpts.LoginUri))
             {
                 txtCustomLoginUri.Text = s["login_uri"].AsString();
             }
             else
             {
-                txtCustomLoginUri.Text = MainProgram.CommandLine.LoginUri;
+                txtCustomLoginUri.Text = MainProgram.CommandLineOpts.LoginUri;
                 cbxGrid.SelectedIndex = cbxGrid.Items.Count - 1;
             }
 
             // Start logging in if autologin enabled from command line
-            if (MainProgram.CommandLine.AutoLogin)
+            if (MainProgram.CommandLineOpts.AutoLogin)
             {
                 BeginLogin();
             }
@@ -471,9 +475,15 @@ namespace Radegast
             if (netcom.LoginOptions.Grid.Platform != "SecondLife")
             {
                 instance.Client.Settings.MULTIPLE_SIMS = true;
+                instance.Client.Settings.HTTP_INVENTORY = !instance.GlobalSettings["disable_http_inventory"];
+            }
+            else
+            {
+                // UDP inventory is deprecated as of 2015-03-30 and no longer supported.
+                // https://community.secondlife.com/t5/Second-Life-Server/Deploy-for-the-week-of-2015-03-30/td-p/2919194
+                instance.Client.Settings.HTTP_INVENTORY = true;
             }
 
-            instance.Client.Settings.HTTP_INVENTORY = !instance.GlobalSettings["disable_http_inventory"];
             netcom.Login();
             SaveConfig();
         }

@@ -17,18 +17,19 @@ XPStyle on                  ; add an XP manifest to the installer
 RequestExecutionLevel admin	; on Vista we must be admin because we write to Program Files
 
 LangString LanguageCode ${LANG_ENGLISH}  "en"
-!define DOTNET_URL "http://download.microsoft.com/download/0/6/1/061F001C-8752-4600-A198-53214C69B51F/dotnetfx35setup.exe"
+!define DOTNET_URL "https://download.microsoft.com/download/B/A/4/BA4A7E71-2906-4B2D-A0E1-80CF16844F5F/dotNetFx45_Full_setup.exe"
 !define MSI31_URL "http://download.microsoft.com/download/1/4/7/147ded26-931c-4daf-9095-ec7baf996f46/WindowsInstaller-KB893803-v2-x86.exe"
 
 !define APPNAME "Radegast"
-!define VERSION "2.19"
+!define VERSION "2.24"
 !define MAINEXEC "${APPNAME}.exe"
-!define DOTNET_VERSION "3.5"
-!define VOICEPACK "RadegastVoicepack-1.0.exe"
+!define DOTNET_VERSION "4.5"
+!define VOICEPACK "RadegastVoicepack-2.0.exe"
 !define UNINST_REG "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
 
 ; The name of the installer
 Name "${APPNAME}"
+BrandingText "Made by a Cinder"
 
 ; The file to write
 OutFile "..\${APPNAME}-${VERSION}-installer.exe"
@@ -62,7 +63,7 @@ Section ".NET check"
 
   ; Set output path to the installation directory.
   SetOutPath $TEMP
-  ReadRegDWORD $0 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5" "SP"
+  ReadRegDWORD $0 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v4.5" "SP"
   ${If} $0 < "1"
 	goto CheckMSI
   ${EndIf}
@@ -123,13 +124,13 @@ Section ".NET check"
     goto DownloadDotNET
 
   DownloadDotNET:
-    DetailPrint "Beginning download of .NET 3.5SP1."
-    NSISdl::download /TIMEOUT=30000 ${DOTNET_URL} "$TEMP\dotnetfx35.exe" /END
+    DetailPrint "Beginning download of .NET 4.5."
+    NSISdl::download /TIMEOUT=30000 ${DOTNET_URL} "$TEMP\dotNetFx45_Full_setup.exe" /END
     Pop $0
     DetailPrint "Result: $0"
     StrCmp $0 "success" InstallDotNet
     StrCmp $0 "cancel" GiveUpDotNET
-    NSISdl::download /TIMEOUT=30000 /NOPROXY ${DOTNET_URL} "$TEMP\dotnetfx35.exe" /END
+    NSISdl::download /TIMEOUT=30000 /NOPROXY ${DOTNET_URL} "$TEMP\dotNetFx45_Full_setup.exe" /END
     Pop $0
     DetailPrint "Result: $0"
     StrCmp $0 "success" InstallDotNet
@@ -152,9 +153,9 @@ Section ".NET check"
     DetailPrint "Pausing installation while downloaded .NET Framework installer runs."
 	MessageBox MB_OKCANCEL "Setup will now install .NET Framework$\nThis will take a while." \
 	  IDOK +1 IDCANCEL GiveUpDotNET
-    ExecWait '$TEMP\dotnetfx35.exe /q /norestart /c:"install /q"'
+    ExecWait '$TEMP\dotNetFx45_Full_setup.exe /q /norestart /c:"install /q"'
     DetailPrint "Completed .NET Framework install/update. Removing .NET Framework installer."
-    Delete "$TEMP\dotnetfx35.exe"
+    Delete "$TEMP\dotNetFx45_Full_setup.exe"
     DetailPrint ".NET Framework installer removed."
 	goto NewDotNET
 
@@ -176,8 +177,8 @@ Section "${APPNAME} core (required)"
   SetOutPath $INSTDIR
 
   ; Put file there
-  File /r /x *.nsi /x *.bak /x *.mdb /x *.application /x *vshost*.* /x *installer*.* /x *.so /x *.dylib *.*
-  ; File Radegast.exe
+  File /r /x *.nsi /x *.bak /x *.mdb /x *.application /x *vshost*.* /x *installer*.* /x *.cs /x *.csproj /x *.so /x *.dylib *.*
+  ;File Radegast.exe
 
   ; Write the installation path into the registry
   WriteRegStr HKLM "SOFTWARE\${APPNAME}" "Install_Dir" "$INSTDIR"
@@ -186,7 +187,7 @@ Section "${APPNAME} core (required)"
   WriteRegStr HKLM ${UNINST_REG} "DisplayName" "${APPNAME} ${VERSION}"
   WriteRegStr HKLM ${UNINST_REG} "UninstallString" '"$INSTDIR\uninstall.exe"'
   WriteRegStr HKLM ${UNINST_REG} "QuietUninstallString" '"$INSTDIR\uninstall.exe" /S'
-  WriteRegStr HKLM ${UNINST_REG} "Publisher" "Radegast Development Team"
+  WriteRegStr HKLM ${UNINST_REG} "Publisher" "Cinder Roxley"
   WriteRegStr HKLM ${UNINST_REG} "DisplayVersion" "${VERSION}"
   WriteRegStr HKLM ${UNINST_REG} "DisplayIcon" "$INSTDIR\${MAINEXEC}"
   ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
@@ -203,17 +204,28 @@ SectionEnd
 Section /o "${APPNAME} Voice Pack (extra download)"
   AddSize 6662
   IfFileExists "$INSTDIR\SLVoice.exe" voice_download_exists
-  NSISdl::download /TIMEOUT=30000  "http://radegast.googlecode.com/files/${VOICEPACK}" "$INSTDIR\${VOICEPACK}"
-  Pop $R0
-  StrCmp $R0 "success" voice_download_success voice_download_failed
-  
+
+  DetailPrint "Beginning download of .NET 4.5."
+  NSISdl::download /TIMEOUT=30000 "http://downloads.radegast.life/${VOICEPACK}" "$INSTDIR\${VOICEPACK}" /END
+  Pop $0
+  DetailPrint "Result: $0"
+  StrCmp $0 "success" voice_download_success
+  StrCmp $0 "cancel" voice_download_cancelled
+  NSISdl::download /TIMEOUT=30000 /NOPROXY "http://downloads.radegast.life/${VOICEPACK}" "$INSTDIR\${VOICEPACK}" /END
+  Pop $0
+  DetailPrint "Result: $0"
+  StrCmp $0 "success" voice_download_success
+ 
+  MessageBox MB_ICONSTOP "Download failed: $0"
+  goto voice_download_end
+
   voice_download_success:
 	ExecWait '"$INSTDIR\${VOICEPACK}" /D=$INSTDIR' $0
     Delete "$INSTDIR\${VOICEPACK}"
     goto voice_download_end
 
-  voice_download_failed:
-    MessageBox MB_OK "Download failed: $R0. Skipping installation of voice."
+  voice_download_cancelled:
+    DetailPrint "Installation cancelled by user."
 	goto voice_download_end
   
   voice_download_exists:

@@ -1,8 +1,12 @@
 # Author
 
-Project founder and development lead:
+Project founder:
 
 * **Latif Khalifa** (email latifer radegast.org)
+
+Current maintainer and lead developer:
+
+* **Cinder Roxley** (email cinder cinderblocks.biz)
 
 Developers:
 
@@ -11,10 +15,14 @@ Developers:
 * **Robin Cornelius**
 * **Revolution Smythe**
 
+[![Travis CI Status](https://travis-ci.org/cinderblocks/radegast.svg?branch=master)](https://travis-ci.org/cinderblocks/radegast)
+[![AppVeyor Status](https://ci.appveyor.com/api/projects/status/ql37302tn67dvqih?svg=true)](https://ci.appveyor.com/project/cinderblocks57647/radegast)
+
 # License
 
-**Radegast Metaverse Client**<br>
-*Copyright © 2009-2011, Radegast Development Team*<br>
+**Radegast Metaverse Client**
+*Copyright © 2009-2016, Radegast Development Team*
+*Copyright © 2017, Cinderblocks Design Co.*
 *All rights reserved.*
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -73,3 +81,7 @@ http://commandline.codeplex.com/<br>
 Uses code snippets from CSAT Library (MIT License)<br>
 Copyright © 2011 mjt<br>
 http://code.google.com/p/csat/<br>
+
+Uses SmartIrc4net (LGPL)<br>
+Copyright © 2003-2005 Mirco Bauer<br>
+http://www.meebey.net/projects/smartirc4net/<br>

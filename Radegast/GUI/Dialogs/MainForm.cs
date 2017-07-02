@@ -145,6 +145,7 @@ namespace Radegast
 
             this.instance = instance;
             this.instance.ClientChanged += new EventHandler<ClientChangedEventArgs>(instance_ClientChanged);
+
             netcom.NetcomSync = this;
             ShowAgentProfile = ShowAgentProfileInternal;
 
@@ -182,6 +183,8 @@ namespace Radegast
 
             InitializeStatusTimer();
             RefreshWindowTitle();
+
+            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         private void RegisterClientEvents(GridClient client)
@@ -736,7 +739,7 @@ namespace Radegast
                 }
                 StartUpdateCheck(false);
 
-                if (instance.PlainColors)
+                if (!instance.GlobalSettings["theme_compatibility_mode"] && instance.PlainColors)
                 {
                     pnlDialog.BackColor = System.Drawing.Color.FromArgb(120, 220, 255);
                 }
@@ -940,6 +943,8 @@ namespace Radegast
             {
                 existing.Visible = false;
             }
+
+            instance.MediaManager.PlayUISound(UISounds.WindowOpen);
 
             notifications.Add(control);
             control.Visible = true;
@@ -1230,7 +1235,7 @@ namespace Radegast
 
         private void accessibilityGuideToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ProcessLink("http://radegast.org/wiki/Accessibility_Guide");
+            ProcessLink("https://radegast.life/documentation/Accessibility_Guide");
         }
 
         private void aboutRadegastToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1256,7 +1261,7 @@ namespace Radegast
             if (ManualUpdateCheck)
                 tabsConsole.DisplayNotificationInChat("Checking for updates...", ChatBufferTextStyle.StatusBlue);
             updateChecker = new UpdateChecker();
-            updateChecker.OnUpdateInfoReceived += new UpdateChecker.UpdateInfoCallback(OnUpdateInfoReceived);
+            updateChecker.OnUpdateInfoReceived += OnUpdateInfoReceived;
             updateChecker.StartCheck();
         }
 

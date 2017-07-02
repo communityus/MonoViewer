@@ -31,13 +31,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections;
-using System.Linq;
 using System.Text;
 using System.IO;
 using System.IO.Compression;
-using System.Xml;
-using System.Threading;
 using OpenTK.Graphics.OpenGL;
 using System.Runtime.InteropServices;
 using System.Drawing;
@@ -233,10 +229,9 @@ namespace Radegast.Rendering
             SceneObject o = (SceneObject)other;
             if (this.DistanceSquared < o.DistanceSquared)
                 return -1;
-            else if (this.DistanceSquared > o.DistanceSquared)
+            if (this.DistanceSquared > o.DistanceSquared)
                 return 1;
-            else
-                return 0;
+            return 0;
         }
 
         #region Occlusion queries
@@ -627,7 +622,7 @@ namespace Radegast.Rendering
 
         public static void Draw2DBox(float x, float y, float width, float height, float depth)
         {
-            GL.Begin(BeginMode.Quads);
+            GL.Begin(PrimitiveType.Quads);
             {
                 GL.TexCoord2(0, 1);
                 GL.Vertex3(x, y, depth);

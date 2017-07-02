@@ -28,7 +28,8 @@
 //
 // $Id: MainForm.cs 223 2009-09-12 04:33:49Z latifer@gmail.com $
 //
-using System.Windows.Forms;
+
+using System.Reflection;
 
 namespace Radegast
 {
@@ -38,13 +39,14 @@ namespace Radegast
             : base(instance)
         {
             InitializeComponent();
-            txtTitle.Text = Properties.Resources.RadegastTitle + "." + RadegastBuild.CurrentRev;
+            txtTitle.Text = Properties.Resources.RadegastTitle + " " + Assembly.GetExecutingAssembly().GetName().Version;
+
+            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         private void lblHomepage_Click(object sender, System.EventArgs e)
         {
-            Instance.MainForm.ProcessLink("http://www.radegast.org/");
+            Instance.MainForm.ProcessLink("https://www.radegast.life/");
         }
-
     }
 }

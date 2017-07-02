@@ -932,7 +932,7 @@ namespace Radegast.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Radegast 2.19.
+        ///   Looks up a localized string similar to Radegast-ng.
         /// </summary>
         internal static string RadegastTitle {
             get {
@@ -1041,7 +1041,7 @@ namespace Radegast.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to http://update.radegast.org/svc/get_latest.
+        ///   Looks up a localized string similar to http://update.radegast.life/v1/.
         /// </summary>
         internal static string UpdateCheckUri {
             get {

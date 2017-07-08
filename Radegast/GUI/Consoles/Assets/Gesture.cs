@@ -35,14 +35,14 @@ using OpenMetaverse.Assets;
 
 namespace Radegast
 {
-    public partial class Guesture : DettachableControl
+    public partial class Gesture : DettachableControl
     {
         private RadegastInstance instance;
         private GridClient client { get { return instance.Client; } }
         private InventoryGesture gesture;
         private AssetGesture gestureAsset;
 
-        public Guesture(RadegastInstance instance, InventoryGesture gesture)
+        public Gesture(RadegastInstance instance, InventoryGesture gesture)
         {
             InitializeComponent();
             Disposed += new EventHandler(Guesture_Disposed);
@@ -86,9 +86,9 @@ namespace Radegast
             gestureAsset = (AssetGesture)asset;
             if (gestureAsset.Decode())
             {
-                for (int i = 0; i < gestureAsset.Sequence.Count; i++)
+                foreach (GestureStep step in gestureAsset.Sequence)
                 {
-                    rtbInfo.AppendText(gestureAsset.Sequence[i].ToString().Trim() + Environment.NewLine);
+                    rtbInfo.AppendText(step.ToString().Trim() + Environment.NewLine);
                 }
             }
         }

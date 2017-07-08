@@ -2362,11 +2362,21 @@
     <Content Include="shader_data\water.vert">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Core\AppDelegate.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
+    <None Include="Entitlements.plist" />
+    <None Include="Info.plist" />
+    <None Include="Assets.xcassets\Contents.json" />
+    <None Include="Assets.xcassets\Radegast.appiconset\Contents.json" />
+    <None Include="Assets.xcassets\Radegast.appiconset\Radegast_128x128.png" />
+    <None Include="Assets.xcassets\Radegast.appiconset\Radegast_16x16.png" />
+    <None Include="Assets.xcassets\Radegast.appiconset\Radegast_16x16%402x.png" />
+    <None Include="Assets.xcassets\Radegast.appiconset\Radegast_32x32.png" />
+    <None Include="Assets.xcassets\Radegast.appiconset\Radegast_32x32%402x.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">

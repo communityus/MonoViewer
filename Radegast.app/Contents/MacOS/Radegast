@@ -14,6 +14,15 @@ APP_PATH=`echo $0 | awk '{split($0,patharr,"/"); idx=1; while(patharr[idx+3] != 
 APP_NAME=`echo $0 | awk '{split($0,patharr,"/"); idx=1; while(patharr[idx+1] != "") {idx++} printf("%s", patharr[idx]); }'`
 ASSEMBLY=`echo $0 | awk '{split($0,patharr,"/"); idx=1; while(patharr[idx+1] != "") {idx++} printf("%s.exe", patharr[idx]); }'`
 
+#find mono
+MONO_EXE=`which mono`
+if [ -x "${MONO_EXE}" ]; then
+    echo Mono installed in path
+else
+    MONO_EXE="/Library/Frameworks/Mono.framework/Versions/5.0.1/bin/mono"
+fi
+echo Mono at $MONO_EXE
+
 #mono version check
 REQUIRED_MAJOR=5
 REQUIRED_MINOR=0
@@ -23,15 +32,16 @@ VERSION_TITLE="Cannot launch $APP_NAME"
 VERSION_MSG="Radegast requires Mono Framework version 5.0.1. Select Download to install this framework and then restart Radegast."
 DOWNLOAD_URL="http://download.mono-project.com/archive/5.0.1/macos-10-universal/MonoFramework-MDK-5.0.1.macos10.xamarin.universal.pkg"
  
-MONO_VERSION="$(mono --version | grep 'Mono JIT compiler version ' |  cut -f5 -d\ )"
+MONO_VERSION="$(${MONO_EXE} --version | awk '/version/ { print $5 }')"
+echo Mono version $MONO_VERSION
 MONO_VERSION_MAJOR="$(echo $MONO_VERSION | cut -f1 -d.)"
 MONO_VERSION_MINOR="$(echo $MONO_VERSION | cut -f2 -d.)"
 MONO_VERSION_MINOR_SUB="$(echo $MONO_VERSION | cut -f3 -d.)"
 
 if [ -z "$MONO_VERSION" ] \
 	|| [ $MONO_VERSION_MAJOR != $REQUIRED_MAJOR ] \
-	|| [ $MONO_VERSION_MINOR != $REQUIRED_MINOR] \
-	|| [ $MONO_VERSION_MINOR_SUB != $REQUIRED_MINOR_SUB]
+	|| [ $MONO_VERSION_MINOR != $REQUIRED_MINOR ] \
+	|| [ $MONO_VERSION_MINOR_SUB != $REQUIRED_MINOR_SUB ]
 then
 	osascript \
 	-e "set question to display dialog \"$VERSION_MSG\" with title \"$VERSION_TITLE\" buttons {\"Cancel\", \"Download...\"} default button 2" \
@@ -59,6 +69,6 @@ if [ "$X11_MODE" -eq "1" ]; then
 else
 	if [ ! -d "./bin" ]; then mkdir bin ; fi
 	if [ -f "./bin/$APP_NAME" ]; then rm -f "./bin/$APP_NAME" ; fi
-	ln -s `which mono` "./bin/$APP_NAME" 
+	ln -s "${MONO_EXE}" "./bin/$APP_NAME" 
 	"./bin/$APP_NAME" "$ASSEMBLY"
 fi

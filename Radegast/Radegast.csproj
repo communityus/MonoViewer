@@ -2362,7 +2362,6 @@
     <Content Include="shader_data\water.vert">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Compile Include="Core\AppDelegate.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

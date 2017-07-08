@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>Test</string>
+	<string>Radegast-ng</string>
 	<key>CFBundleIdentifier</key>
-	<string>life.radegast.test</string>
+	<string>life.radegast.radegast-ng</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
@@ -21,13 +21,10 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>NSHumanReadableCopyright</key>
-	<string></string>
+	<string>Copyright (c) 2009-2017 Radegast Development Team</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSMainStoryboardFile</key>
-	<string>Main</string>
 	<key>XSAppIconAssets</key>
-	<string>Assets.xcassets/AppIcon.appiconset</string>
-	
+	<string>Assets.xcassets/Radegast.appiconset</string>
 </dict>
 </plist>

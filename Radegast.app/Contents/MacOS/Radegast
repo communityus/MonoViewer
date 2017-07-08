@@ -24,21 +24,24 @@ fi
 echo Mono at $MONO_EXE
 
 #mono version check
-REQUIRED_MAJOR=5
-REQUIRED_MINOR=0
+REQUIRED_MAJOR=4
+REQUIRED_MINOR=8
+REQUIRED_MINOR_SUB=0
 
 VERSION_TITLE="Cannot launch $APP_NAME"
-VERSION_MSG="$APP_NAME requires the Mono Framework version $REQUIRED_MAJOR.$REQUIRED_MINOR or later."
-DOWNLOAD_URL="http://www.go-mono.com/mono-downloads/download.html"
+VERSION_MSG="$APP_NAME requires Mono Framework version $REQUIRED_MAJOR.$REQUIRED_MINOR.$REQUIRED_MINOR_SUB."
+DOWNLOAD_URL="http://download.mono-project.com/archive/4.8.0/macos-10-universal/MonoFramework-MDK-4.8.0.macos10.xamarin.universal.pkg"
  
 MONO_VERSION="$(${MONO_EXE} --version | awk '/version/ { print $5 }')"
 echo Mono version $MONO_VERSION
 MONO_VERSION_MAJOR="$(echo $MONO_VERSION | cut -f1 -d.)"
 MONO_VERSION_MINOR="$(echo $MONO_VERSION | cut -f2 -d.)"
+MONO_VERSION_MINOR_SUB="$(echo $MONO_VERSION | cut -f3 -d.)"
 
 if [ -z "$MONO_VERSION" ] \
-	|| [ $MONO_VERSION_MAJOR -lt $REQUIRED_MAJOR ] \
-    || [ $MONO_VERSION_MAJOR -eq $REQUIRED_MAJOR -a $MONO_VERSION_MINOR -lt $REQUIRED_MINOR ]
+    || [ $MONO_VERSION_MAJOR != $REQUIRED_MAJOR ] \
+    || [ $MONO_VERSION_MINOR != $REQUIRED_MINOR ] \
+    || [ $MONO_VERSION_MINOR_SUB != $REQUIRED_MINOR_SUB ]
 then
 	osascript \
 	-e "set question to display dialog \"$VERSION_MSG\" with title \"$VERSION_TITLE\" buttons {\"Cancel\", \"Download...\"} default button 2" \

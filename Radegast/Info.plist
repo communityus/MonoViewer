@@ -3,9 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>Radegast-ng</string>
+	<string>Radegast</string>
 	<key>CFBundleIdentifier</key>
-	<string>life.radegast.radegast-ng</string>
+	<string>com.viewer.Radegast</string>
+    <key>CFBundleExecutable</key>
+    <string>Radegast</string>
+    <key>CFBundleIconFile</key>
+    <string>radegast.icns</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.12</string>
 	<key>CFBundleDevelopmentRegion</key>

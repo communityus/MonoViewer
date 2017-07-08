@@ -15,13 +15,13 @@ APP_NAME=`echo $0 | awk '{split($0,patharr,"/"); idx=1; while(patharr[idx+1] != 
 ASSEMBLY=`echo $0 | awk '{split($0,patharr,"/"); idx=1; while(patharr[idx+1] != "") {idx++} printf("%s.exe", patharr[idx]); }'`
 
 #mono version check
-REQUIRED_MAJOR=2
-REQUIRED_MINOR=10
-REQUIRED_MINOR_SUB=9
+REQUIRED_MAJOR=5
+REQUIRED_MINOR=0
+REQUIRED_MINOR_SUB=1
 
 VERSION_TITLE="Cannot launch $APP_NAME"
-VERSION_MSG="Radegast requires Mono Framework version 2.10.9 build 12. Select Download to install this framework and then restart SpotEditor."
-DOWNLOAD_URL="http://download.mono-project.com/archive/2.10.9/macos-10-x86/12/MonoFramework-MDK-2.10.9_12.macos10.xamarin.x86.dmg"
+VERSION_MSG="Radegast requires Mono Framework version 5.0.1. Select Download to install this framework and then restart Radegast."
+DOWNLOAD_URL="http://download.mono-project.com/archive/5.0.1/macos-10-universal/MonoFramework-MDK-5.0.1.macos10.xamarin.universal.pkg"
  
 MONO_VERSION="$(mono --version | grep 'Mono JIT compiler version ' |  cut -f5 -d\ )"
 MONO_VERSION_MAJOR="$(echo $MONO_VERSION | cut -f1 -d.)"

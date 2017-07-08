@@ -6,10 +6,6 @@
 	<string>Radegast-ng</string>
 	<key>CFBundleIdentifier</key>
 	<string>life.radegast.radegast-ng</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
-	<key>CFBundleVersion</key>
-	<string>1</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.12</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -22,9 +18,5 @@
 	<string>????</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright (c) 2009-2017 Radegast Development Team</string>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
-	<key>XSAppIconAssets</key>
-	<string>Assets.xcassets/Radegast.appiconset</string>
 </dict>
 </plist>

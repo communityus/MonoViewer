@@ -19,7 +19,7 @@ MONO_EXE=`which mono`
 if [ -x "${MONO_EXE}" ]; then
     echo Mono installed in path
 else
-    MONO_EXE="/Library/Frameworks/Mono.framework/Versions/5.0.1/bin/mono"
+    MONO_EXE="/Library/Frameworks/Mono.framework/Versions/Current/bin/mono"
 fi
 echo Mono at $MONO_EXE
 

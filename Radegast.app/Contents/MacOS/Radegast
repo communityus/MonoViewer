@@ -10,7 +10,7 @@ APP_PATH=`echo $0 | awk '{split($0,patharr,"/"); idx=1; while(patharr[idx+3] != 
 APP_NAME=`echo $0 | awk '{split($0,patharr,"/"); idx=1; while(patharr[idx+1] != "") {idx++} printf("%s", patharr[idx]); }'`
 ASSEMBLY=`echo $0 | awk '{split($0,patharr,"/"); idx=1; while(patharr[idx+1] != "") {idx++} printf("%s.exe", patharr[idx]); }'`
 
-MONO_FRAMEWORK_PATH=/Library/Frameworks/Mono.framework/Versions/Current
+MONO_FRAMEWORK_PATH=/Library/Frameworks/Mono.framework/Versions/4.8.0
 export DYLD_FALLBACK_LIBRARY_PATH="$DIR:$MONO_FRAMEWORK_PATH/lib:/lib:/usr/lib"
 export PATH="$MONO_FRAMEWORK_PATH/bin:$PATH"
 

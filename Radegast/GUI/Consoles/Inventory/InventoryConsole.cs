@@ -45,6 +45,7 @@ using System.Threading;
 
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using Radegast.Core;
 
 namespace Radegast
 {
@@ -187,6 +188,8 @@ namespace Radegast
 
         void InventoryConsole_Disposed(object sender, EventArgs e)
         {
+            GestureManager.Instance.StopMonitoring();
+
             if (TreeUpdateTimer != null)
             {
                 TreeUpdateTimer.Stop();
@@ -859,6 +862,8 @@ namespace Radegast
             }
 
             Logger.Log("Finished updating invenory folders, saving cache...", Helpers.LogLevel.Debug, client);
+            GestureManager.Instance.BeginMonitoring();
+
             WorkPool.QueueUserWorkItem((object state) => Inventory.SaveToDisk(instance.InventoryCacheFileName));
 
             if (!instance.MonoRuntime || IsHandleCreated)
@@ -1253,6 +1258,15 @@ namespace Radegast
                 }
             }
 
+            var gesture = item as InventoryGesture;
+            if (gesture != null)
+            {
+                if (instance.Client.Self.ActiveGestures.ContainsKey(item.UUID))
+                {
+                    raw += " (active)";
+                }
+            }
+
             if ((item.Permissions.OwnerMask & PermissionMask.Modify) == 0)
                 raw += " (no modify)";
 
@@ -1488,6 +1502,19 @@ namespace Radegast
                         ctxItem = new ToolStripMenuItem("Info", null, OnInvContextClick);
                         ctxItem.Name = "gesture_info";
                         ctxInv.Items.Add(ctxItem);
+
+                        if (instance.Client.Self.ActiveGestures.ContainsKey(item.UUID))
+                        {
+                            ctxItem = new ToolStripMenuItem("Deactivate", null, OnInvContextClick);
+                            ctxItem.Name = "gesture_deactivate";
+                            ctxInv.Items.Add(ctxItem);
+                        }
+                        else
+                        {
+                            ctxItem = new ToolStripMenuItem("Activate", null, OnInvContextClick);
+                            ctxItem.Name = "gesture_activate";
+                            ctxInv.Items.Add(ctxItem);
+                        }
                     }
 
                     if (item.InventoryType == InventoryType.Animation)
@@ -1913,6 +1940,16 @@ namespace Radegast
 
                     case "gesture_play":
                         client.Self.PlayGesture(item.AssetUUID);
+                        break;
+
+                    case "gesture_activate":
+                        instance.Client.Self.ActivateGesture(item.UUID, item.AssetUUID);
+                        invTree.SelectedNode.Text = ItemLabel(item, false);
+                        break;
+
+                    case "gesture_deactivate":
+                        instance.Client.Self.DeactivateGesture(item.UUID);
+                        invTree.SelectedNode.Text = ItemLabel(item, false);
                         break;
 
                     case "animation_play":

@@ -47,8 +47,9 @@ namespace Radegast
     public partial class MapConsole : UserControl
     {
         RadegastInstance instance;
-        GridClient client { get { return instance.Client; } }
-        bool Active { get { return client.Network.Connected; } }
+        GridClient client => instance.Client;
+        bool Active => client.Network.Connected;
+        WebBrowser map;
         MapControl mmap;
 		object map = null;
         Regex slscheme = new Regex("^secondlife://(.+)/([0-9]+)/([0-9]+)");
@@ -61,7 +62,7 @@ namespace Radegast
             InitializeComponent();
             Disposed += new EventHandler(frmMap_Disposed);
 
-            this.instance = inst;
+            instance = inst;
             instance.ClientChanged += new EventHandler<ClientChangedEventArgs>(instance_ClientChanged);
 
             Visible = false;
@@ -70,7 +71,7 @@ namespace Radegast
             // Register callbacks
             RegisterClientEvents(client);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         private void RegisterClientEvents(GridClient client)
@@ -100,7 +101,7 @@ namespace Radegast
             if (map == null)
             {
                 mmap = new MapControl(instance);
-                mmap.MapTargetChanged += (object sender, MapTargetChangedEventArgs e) =>
+                mmap.MapTargetChanged += (sender, e) =>
                 {
                     txtRegion.Text = e.Region.Name;
                     nudX.Value = e.LocalX;
@@ -264,10 +265,7 @@ namespace Radegast
                     lastTick = Environment.TickCount;
                     InTeleport = false;
                     Network_SimChanged(null, null);
-                    if (mmap != null)
-                    {
-                        mmap.ClearTarget();
-                    }
+                    mmap?.ClearTarget();
                     break;
 
                 default:
@@ -351,10 +349,15 @@ namespace Radegast
         {
             if (!Active) return;
 
+            if (instance.MonoRuntime)
+            {
+                map?.Navigate(Path.GetDirectoryName(Application.ExecutablePath) + @"/worldmap.html");
+            }
+
             lblStatus.Text = "Teleporting to " + txtRegion.Text;
             prgTeleport.Style = ProgressBarStyle.Marquee;
 
-            WorkPool.QueueUserWorkItem((object state) =>
+            WorkPool.QueueUserWorkItem(state =>
                 {
                     if (!client.Self.Teleport(txtRegion.Text, new Vector3((int)nudX.Value, (int)nudY.Value, (int)nudZ.Value)))
                     {
@@ -384,7 +387,7 @@ namespace Radegast
                     WorkPool.QueueUserWorkItem(sync =>
                         {
                             ManualResetEvent done = new ManualResetEvent(false);
-                            EventHandler<GridRegionEventArgs> handler = (object sender, GridRegionEventArgs e) =>
+                            EventHandler<GridRegionEventArgs> handler = (sender, e) =>
                                 {
                                     regionHandles[e.Region.Name] = Utils.UIntsToLong((uint)e.Region.X, (uint)e.Region.Y);
                                     if (e.Region.Name == regionName)
@@ -489,7 +492,7 @@ namespace Radegast
                 ddOnlineFriends.Items.Add("Online Friends");
                 ddOnlineFriends.SelectedIndex = 0;
 
-                var friends = client.Friends.FriendList.FindAll((FriendInfo f) => { return f.CanSeeThemOnMap && f.IsOnline; });
+                var friends = client.Friends.FriendList.FindAll(f => f.CanSeeThemOnMap && f.IsOnline);
                 if (friends != null)
                 {
                     foreach (var f in friends)
@@ -517,16 +520,13 @@ namespace Radegast
         {
             if (mmap != null)
             {
-                mmap.Zoom = mmap.MinZoom + (mmap.MaxZoom - mmap.MinZoom) * (float)((float)zoomTracker.Value / 100f);
+                mmap.Zoom = mmap.MinZoom + (mmap.MaxZoom - mmap.MinZoom) * ((float)zoomTracker.Value / 100f);
             }
         }
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            if (mmap != null)
-            {
-                mmap.RefreshRegionAgents();
-            }
+            mmap?.RefreshRegionAgents();
         }
 
         #endregion GUIEvents
@@ -572,7 +572,7 @@ namespace Radegast
         private void ddOnlineFriends_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (ddOnlineFriends.SelectedIndex < 1) return;
-            mapFriend = client.Friends.FriendList.Find((FriendInfo f) => { return f.Name == ddOnlineFriends.SelectedItem.ToString(); });
+            mapFriend = client.Friends.FriendList.Find(f => { return f.Name == ddOnlineFriends.SelectedItem.ToString(); });
             if (mapFriend != null)
             {
                 targetRegionHandle = 0;

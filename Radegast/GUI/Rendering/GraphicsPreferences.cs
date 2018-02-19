@@ -30,12 +30,6 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using OpenMetaverse;
 
@@ -44,7 +38,8 @@ namespace Radegast.Rendering
     public partial class GraphicsPreferences : UserControl
     {
         RadegastInstance Instance;
-        GridClient Client { get { return Instance.Client; } }
+        GridClient Client => Instance.Client;
+
         SceneWindow Window
         {
             get
@@ -61,12 +56,12 @@ namespace Radegast.Rendering
         {
             InitializeComponent();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         public GraphicsPreferences(RadegastInstance instance)
         {
-            this.Instance = instance;
+            Instance = instance;
             InitializeComponent();
             Disposed += new EventHandler(GraphicsPreferences_Disposed);
 
@@ -84,7 +79,7 @@ namespace Radegast.Rendering
             cbShiny.Checked = Instance.GlobalSettings["scene_viewer_shiny"];
             cbVBO.Checked = Instance.GlobalSettings["rendering_use_vbo"];
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void GraphicsPreferences_Disposed(object sender, EventArgs e)

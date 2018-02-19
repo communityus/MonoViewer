@@ -53,6 +53,7 @@ namespace Radegast
             "fmod.dll",
             "fmodstudio.dll",
             "IKVM.",
+            "LibreMetaverse.PrimMesher.dll",
             "LibreMetaverse.Rendering.Meshmerizer.dll",
             "LibreMetaverse.StructuredData.dll",
             "LibreMetaverse.dll",
@@ -117,7 +118,7 @@ namespace Radegast
         /// <param name="instance">Radegast instance PluginManager is associated with</param>
         public PluginManager(RadegastInstance instance)
         {
-            this.Instance = instance;
+            Instance = instance;
         }
 
         /// <summary>

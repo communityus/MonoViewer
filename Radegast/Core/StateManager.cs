@@ -48,9 +48,9 @@ namespace Radegast
 
         public KnownHeading(string id, string name, Quaternion heading)
         {
-            this.ID = id;
-            this.Name = name;
-            this.Heading = heading;
+            ID = id;
+            Name = name;
+            Heading = heading;
         }
 
         public override string ToString()
@@ -275,7 +275,7 @@ namespace Radegast
                 client.Objects.RequestObject(client.Network.CurrentSim, client.Self.SittingOn);
             }
 
-            SitStateChanged?.Invoke(this, new SitEventArgs(this.sitting));
+            SitStateChanged?.Invoke(this, new SitEventArgs(sitting));
         }
 
         /// <summary>
@@ -339,7 +339,7 @@ namespace Radegast
             // First try the object tracker
             foreach (var s in Simulators)
             {
-                avi = s.ObjectsAvatars.Find((Avatar av) => av.ID == person);
+                avi = s.ObjectsAvatars.Find(av => av.ID == person);
                 if (avi != null)
                 {
                     sim = s;
@@ -350,7 +350,7 @@ namespace Radegast
             {
                 foreach (var s in Simulators)
                 {
-                    avi = s.ObjectsPrimitives.Find((Primitive av) => av.ID == person);
+                    avi = s.ObjectsPrimitives.Find(av => av.ID == person);
                     if (avi != null)
                     {
                         sim = s;
@@ -491,20 +491,20 @@ namespace Radegast
         {
             if (!client.Network.Connected) return;
 
-            if (e.Status == TeleportStatus.Progress)
+            switch (e.Status)
             {
-                client.Self.SphereEffect(client.Self.GlobalPosition, Color4.White, 4f, teleportEffect);
-            }
-
-            if (e.Status == TeleportStatus.Finished)
-            {
-                client.Self.SphereEffect(Vector3d.Zero, Color4.White, 0f, teleportEffect);
-                SetRandomHeading();
-            }
-
-            if (e.Status == TeleportStatus.Failed)
-            {
-                client.Self.SphereEffect(Vector3d.Zero, Color4.White, 0f, teleportEffect);
+                case TeleportStatus.Progress:
+                    instance.MediaManager.PlayUISound(UISounds.Teleport);
+                    client.Self.SphereEffect(client.Self.GlobalPosition, Color4.White, 4f, teleportEffect);
+                    break;
+                case TeleportStatus.Finished:
+                    client.Self.SphereEffect(Vector3d.Zero, Color4.White, 0f, teleportEffect);
+                    SetRandomHeading();
+                    break;
+                case TeleportStatus.Failed:
+                    instance.MediaManager.PlayUISound(UISounds.Error);
+                    client.Self.SphereEffect(Vector3d.Zero, Color4.White, 0f, teleportEffect);
+                    break;
             }
         }
 
@@ -606,7 +606,7 @@ namespace Radegast
         public Quaternion AvatarRotation(Simulator sim, UUID avID)
         {
             Quaternion rot = Quaternion.Identity;
-            Avatar av = sim.ObjectsAvatars.Find((Avatar a) => a.ID == avID);
+            Avatar av = sim.ObjectsAvatars.Find(a => a.ID == avID);
 
             if (av == null)
                 return rot;
@@ -631,7 +631,7 @@ namespace Radegast
         public Vector3 AvatarPosition(Simulator sim, UUID avID)
         {
             Vector3 pos = Vector3.Zero;
-            Avatar av = sim.ObjectsAvatars.Find((Avatar a) => a.ID == avID);
+            Avatar av = sim.ObjectsAvatars.Find(a => a.ID == avID);
             if (av != null)
             {
                 return AvatarPosition(sim, av);
@@ -777,7 +777,7 @@ namespace Radegast
                 walkTimer = new System.Threading.Timer(new TimerCallback(walkTimerElapsed), null, walkChekInterval, Timeout.Infinite);
             }
 
-            lastDistanceChanged = System.Environment.TickCount;
+            lastDistanceChanged = Environment.TickCount;
             client.Self.AutoPilotCancel();
             IsWalking = true;
             client.Self.AutoPilot(walkToTarget.X, walkToTarget.Y, walkToTarget.Z);
@@ -798,10 +798,10 @@ namespace Radegast
             {
                 if (lastDistance != (int)distance)
                 {
-                    lastDistanceChanged = System.Environment.TickCount;
+                    lastDistanceChanged = Environment.TickCount;
                     lastDistance = (int)distance;
                 }
-                else if ((System.Environment.TickCount - lastDistanceChanged) > 10000)
+                else if ((Environment.TickCount - lastDistanceChanged) > 10000)
                 {
                     // Our distance to the target has not changed in 10s, give up
                     EndWalking();
@@ -848,7 +848,7 @@ namespace Radegast
 
                     if (walkToTarget != Vector3d.Zero)
                     {
-                        System.Threading.Thread.Sleep(1000);
+                        Thread.Sleep(1000);
                         msg += $" {Vector3d.Distance(client.Self.GlobalPosition, walkToTarget):0} meters from destination";
                         walkToTarget = Vector3d.Zero;
                     }
@@ -882,7 +882,7 @@ namespace Radegast
         {
             var busyAnim = new Dictionary<UUID, bool> {{BusyAnimationID, busy}};
             client.Self.Animate(busyAnim, true);
-            this.IsBusy = busy;
+            IsBusy = busy;
         }
 
         public void SetFlying(bool fly)
@@ -930,7 +930,7 @@ namespace Radegast
         {
             var stop = new Dictionary<UUID, bool>();
 
-            client.Self.SignaledAnimations.ForEach((UUID anim) =>
+            client.Self.SignaledAnimations.ForEach(anim =>
             {
                 if (!KnownAnimations.ContainsKey(anim))
                 {
@@ -967,7 +967,7 @@ namespace Radegast
         private UUID sphereID;
         private List<UUID> beamID;
         private int numBeans;
-        private Color4[] beamColors = new Color4[3] { new Color4(0, 255, 0, 255), new Color4(255, 0, 0, 255), new Color4(0, 0, 255, 255) };
+        private Color4[] beamColors = new Color4[] { new Color4(0, 255, 0, 255), new Color4(255, 0, 0, 255), new Color4(0, 0, 255, 255) };
         private Primitive targetPrim;
 
         public void UnSetPointing()
@@ -1006,7 +1006,6 @@ namespace Radegast
                 int i = 0;
                 for (i = 0; i < numBeans; i++)
                 {
-                    UUID newBeam = UUID.Random();
                     Vector3d scatter;
 
                     if (i == 0)
@@ -1025,7 +1024,6 @@ namespace Radegast
 
                 for (int j = 1; j < numBeans; j++)
                 {
-                    UUID newBeam = UUID.Random();
                     Vector3d cross = new Vector3d(0, 0, 1);
                     cross.Normalize();
                     var scatter = GlobalPosition(targetPrim) + cross * (j * 0.2d) * (j % 2 == 0 ? 1 : -1);
@@ -1033,7 +1031,7 @@ namespace Radegast
                     client.Self.BeamEffect(client.Self.AgentID, UUID.Zero, scatter, beamColors[beamRandom.Next(0, 3)], 1.0f, beamID[j + i - 1]);
                 }
             }
-            catch (Exception) { };
+            catch (Exception) { }
 
         }
 
@@ -1109,7 +1107,7 @@ namespace Radegast
 
         public SitEventArgs(bool sitting)
         {
-            this.Sitting = sitting;
+            Sitting = sitting;
         }
     }
 }

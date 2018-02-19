@@ -31,8 +31,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
 
 using OpenMetaverse;
 
@@ -40,9 +38,9 @@ namespace Radegast.Commands
 {
     public class TPCommand : RadegastCommand
     {
-        TabsConsole TC { get { return Instance.TabConsole; } }
+        TabsConsole TC => Instance.TabConsole;
         public static string FolderName = "Radegast Landmarks";
-        Inventory Inv { get { return Client.Inventory.Store; } }
+        Inventory Inv => Client.Inventory.Store;
         ConsoleWriteLine wl;
 
         public TPCommand(RadegastInstance instance)
@@ -52,11 +50,6 @@ namespace Radegast.Commands
 			Description = "Teleport to a named landmark from the \"" + FolderName + "\" inventory folder";
             Usage = "tp (list|landmark name|landmark number|help) (type \"" + CommandsManager.CmdPrefix + "tp help\" for full usage)";
             
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
         }
 
         void PrintUsage()
@@ -96,7 +89,7 @@ Example:
                 return;
             }
 
-            InventoryFolder folder = (InventoryFolder)Inv.GetContents(Inv.RootFolder).Find((InventoryBase b) => { return b.Name == FolderName && b is InventoryFolder; });
+            InventoryFolder folder = (InventoryFolder)Inv.GetContents(Inv.RootFolder).Find(b => b.Name == FolderName && b is InventoryFolder);
             if (folder == null)
             {
                 Client.Inventory.CreateFolder(Inv.RootFolder.UUID, FolderName);
@@ -106,8 +99,8 @@ Example:
 
             List<InventoryLandmark> landmarks = new List<InventoryLandmark>();
             Inv.GetContents(folder)
-                .FindAll((InventoryBase b) => { return b is InventoryLandmark; })
-                .ForEach((InventoryBase l) => { landmarks.Add((InventoryLandmark)l); });
+                .FindAll(b => b is InventoryLandmark)
+                .ForEach(l => { landmarks.Add((InventoryLandmark)l); });
 
             if (landmarks.Count == 0)
             {
@@ -146,17 +139,15 @@ Example:
                 return;
             }
 
-            InventoryLandmark lm = landmarks.Find((InventoryLandmark l) => { return l.Name.ToLower().StartsWith(cmd.ToLower()); });
+            InventoryLandmark lm = landmarks.Find(l => l.Name.ToLower().StartsWith(cmd.ToLower()));
             if (lm == null)
             {
                 WriteLine("Could not find landmark {0}, try {1}tp list", cmd, CommandsManager.CmdPrefix);
-                return;
             }
             else
             {
                 WriteLine("Teleporting to {0}", lm.Name);
                 Client.Self.RequestTeleport(lm.AssetUUID);
-                return;
             }
         }
 

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Speech.Recognition;
 using OpenMetaverse;
 
@@ -28,7 +26,6 @@ namespace RadegastSpeech
                 rec = null;
                 Logger.Log("Speech recognition disabled, " + e.Message,
                     Helpers.LogLevel.Warning);
-                return;
             }
         }
 

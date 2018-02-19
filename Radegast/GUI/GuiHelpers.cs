@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace Radegast.GUI
@@ -12,7 +9,7 @@ namespace Radegast.GUI
         {
             try
             {
-                var instance = Radegast.RadegastInstance.GlobalInstance;
+                var instance = RadegastInstance.GlobalInstance;
                 if (instance.GlobalSettings["theme_compatibility_mode"])
                 {
                     ApplyThemeCompatibilityModeRecursive(root);

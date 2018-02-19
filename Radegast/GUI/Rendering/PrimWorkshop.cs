@@ -33,7 +33,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
 #if (COGBOT_LIBOMV || USE_STHREADS)
@@ -46,7 +45,6 @@ using System.Threading;
 using OpenTK.Graphics.OpenGL;
 using OpenMetaverse;
 using OpenMetaverse.Rendering;
-using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
 
 #endregion Usings
@@ -112,7 +110,7 @@ namespace Radegast.Rendering
         public frmPrimWorkshop(RadegastInstance instance, uint rootLocalID)
             : base(instance)
         {
-            this.RootPrimLocalID = rootLocalID;
+            RootPrimLocalID = rootLocalID;
 
             InitializeComponent();
             Disposed += new EventHandler(frmPrimWorkshop_Disposed);
@@ -129,7 +127,7 @@ namespace Radegast.Rendering
             Client.Objects.ObjectUpdate += new EventHandler<PrimEventArgs>(Objects_ObjectUpdate);
             Client.Objects.ObjectDataBlockUpdate += new EventHandler<ObjectDataBlockUpdateEventArgs>(Objects_ObjectDataBlockUpdate);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void frmPrimWorkshop_Disposed(object sender, EventArgs e)
@@ -140,10 +138,7 @@ namespace Radegast.Rendering
                 textRendering = null;
             }
 
-            if (glControl != null)
-            {
-                glControl.Dispose();
-            }
+            glControl?.Dispose();
             glControl = null;
             Client.Objects.TerseObjectUpdate -= new EventHandler<TerseObjectUpdateEventArgs>(Objects_TerseObjectUpdate);
             Client.Objects.ObjectUpdate -= new EventHandler<PrimEventArgs>(Objects_ObjectUpdate);
@@ -182,8 +177,7 @@ namespace Radegast.Rendering
         {
             RenderingEnabled = false;
 
-            if (glControl != null)
-                glControl.Dispose();
+            glControl?.Dispose();
             glControl = null;
 
             GLMode = null;
@@ -584,7 +578,7 @@ namespace Radegast.Rendering
                     if (Client.Network.CurrentSim.ObjectsPrimitives.ContainsKey(RootPrimLocalID))
                     {
                         UpdatePrimBlocking(Client.Network.CurrentSim.ObjectsPrimitives[RootPrimLocalID]);
-                        var children = Client.Network.CurrentSim.ObjectsPrimitives.FindAll((Primitive p) => { return p.ParentID == RootPrimLocalID; });
+                        var children = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(p => { return p.ParentID == RootPrimLocalID; });
                         children.ForEach(p => UpdatePrimBlocking(p));
                     }
                 }
@@ -595,7 +589,7 @@ namespace Radegast.Rendering
         #region Public methods
         public void SetView(Vector3 center, int roll, int pitch, int yaw, int zoom)
         {
-            this.Center = center;
+            Center = center;
             scrollRoll.Value = roll;
             scrollPitch.Value = pitch;
             scrollYaw.Value = yaw;
@@ -721,17 +715,12 @@ namespace Radegast.Rendering
                                 case Shininess.High:
                                     GL.Material(MaterialFace.Front, MaterialParameter.Shininess, 94f);
                                     break;
-
                                 case Shininess.Medium:
                                     GL.Material(MaterialFace.Front, MaterialParameter.Shininess, 64f);
                                     break;
-
                                 case Shininess.Low:
                                     GL.Material(MaterialFace.Front, MaterialParameter.Shininess, 24f);
                                     break;
-
-
-                                case Shininess.None:
                                 default:
                                     GL.Material(MaterialFace.Front, MaterialParameter.Shininess, 0f);
                                     break;
@@ -870,7 +859,7 @@ namespace Radegast.Rendering
             Render(true);
 
             byte[] color = new byte[4];
-            GL.ReadPixels(x, glControl.Height - y, 1, 1, OpenTK.Graphics.OpenGL.PixelFormat.Rgba, PixelType.UnsignedByte, color);
+            GL.ReadPixels(x, glControl.Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, color);
 
             GL.PopAttrib();
 
@@ -1042,7 +1031,7 @@ namespace Radegast.Rendering
             try
             {
                 gotImage.Reset();
-                instance.Client.Assets.RequestImage(textureID, (TextureRequestState state, AssetTexture assetTexture) =>
+                instance.Client.Assets.RequestImage(textureID, (state, assetTexture) =>
                     {
                         try
                         {

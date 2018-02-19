@@ -64,7 +64,7 @@ namespace Radegast.Rendering
 
     public class TextureInfo
     {
-        public System.Drawing.Image Texture;
+        public Image Texture;
         public int TexturePointer;
         public bool HasAlpha;
         public bool FullAlpha;
@@ -82,7 +82,7 @@ namespace Radegast.Rendering
         public byte[] TextureData = null;
         public byte[] TGAData = null;
         public bool LoadAssetFromCache = false;
-        public OpenMetaverse.ImageType ImageType = OpenMetaverse.ImageType.Normal;
+        public ImageType ImageType = ImageType.Normal;
         public string BakeName = string.Empty;
         public UUID AvatarID = UUID.Zero;
     }
@@ -110,7 +110,7 @@ namespace Radegast.Rendering
         #region Public fields
         /// <summary>Interpolated local position of the object</summary>
         public Vector3 InterpolatedPosition;
-        /// <summary>Interpolated local rotation of the object/summary>
+        /// <summary>Interpolated local rotation of the object</summary>
         public Quaternion InterpolatedRotation;
         /// <summary>Rendered position of the object in the region</summary>
         public Vector3 RenderPosition;
@@ -227,9 +227,9 @@ namespace Radegast.Rendering
         public virtual int CompareTo(object other)
         {
             SceneObject o = (SceneObject)other;
-            if (this.DistanceSquared < o.DistanceSquared)
+            if (DistanceSquared < o.DistanceSquared)
                 return -1;
-            if (this.DistanceSquared > o.DistanceSquared)
+            if (DistanceSquared > o.DistanceSquared)
                 return 1;
             return 0;
         }
@@ -475,7 +475,7 @@ namespace Radegast.Rendering
                     using (var compressed = new DeflateStream(f, CompressionMode.Decompress))
                     {
                         int read = 0;
-                        while ((read = compressed.Read(tgaData, read, uncompressedSize - read)) > 0) ;
+                        while ((read = compressed.Read(tgaData, read, uncompressedSize - read)) > 0) { }
                     }
                 }
 
@@ -658,16 +658,12 @@ namespace Radegast.Rendering
         public bool Manual;
         Vector3 mPosition;
         Vector3 mFocalPoint;
-        bool mModified;
 
         /// <summary>Camera position</summary>
         public Vector3 Position
         {
-            get
-            {
-                return mPosition;
-            }
-            
+            get => mPosition;
+
             set
             {
                 if (mPosition != value)
@@ -681,11 +677,8 @@ namespace Radegast.Rendering
         /// <summary>Camera target</summary>
         public Vector3 FocalPoint
         {
-            get
-            {
-                return mFocalPoint;
-            }
-            
+            get => mFocalPoint;
+
             set
             {
                 if (mFocalPoint != value)
@@ -701,7 +694,7 @@ namespace Radegast.Rendering
         /// <summary>Draw distance</summary>
         public float Far;
         /// <summary>Has camera been modified</summary>
-        public bool Modified { get { return mModified; } set { mModified = value; } }
+        public bool Modified { get; set; }
 
         public float TimeToTarget = 0f;
 
@@ -710,7 +703,7 @@ namespace Radegast.Rendering
 
         void Modify()
         {
-            mModified = true;
+            Modified = true;
         }
 
         public void Step(float time)
@@ -845,7 +838,7 @@ namespace Radegast.Rendering
                     {
                         string mtlName = String.Format("material{0}-{1}", primNr, face.ID);
                         Primitive.TextureEntryFace tex = face.TextureFace;
-                        string texName = tex.TextureID.ToString() + ".tga";
+                        string texName = tex.TextureID + ".tga";
 
                         // FIXME: Convert the source to TGA (if needed) and copy to the destination
 
@@ -1245,7 +1238,7 @@ namespace Radegast.Rendering
                 VFSblock block = new VFSblock();
                 offset = block.readblock(blockdata, offset);
 
-                FileStream writer = File.Open(OpenMetaverse.Settings.RESOURCE_DIR + System.IO.Path.DirectorySeparatorChar + block.mFileID.ToString(), FileMode.Create);
+                FileStream writer = File.Open(OpenMetaverse.Settings.RESOURCE_DIR + System.IO.Path.DirectorySeparatorChar + block.mFileID, FileMode.Create);
                 byte[] data = new byte[block.mSize];
                 datastream.Seek(block.mLocation, SeekOrigin.Begin);
                 datastream.Read(data, 0, block.mSize);

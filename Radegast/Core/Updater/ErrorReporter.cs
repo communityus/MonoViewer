@@ -29,8 +29,6 @@
 // $Id$
 //
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.IO;
 using System.Net;
@@ -53,7 +51,7 @@ namespace Radegast
         {
             if (ex == null) return;
 
-            report.AppendFormat("{0}: ", ex.ToString());
+            report.AppendFormat("{0}: ", ex);
             report.AppendLine(ex.Message);
             report.AppendLine(ex.StackTrace);
             report.AppendLine();

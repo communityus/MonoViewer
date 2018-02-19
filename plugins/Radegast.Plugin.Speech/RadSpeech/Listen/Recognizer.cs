@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace RadegastSpeech.Listen
+﻿namespace RadegastSpeech.Listen
 {
     internal class Recognizer
     {
@@ -33,18 +28,15 @@ namespace RadegastSpeech.Listen
 
         internal void CreateGrammar(string name, string[] options)
         {
-            if (control.osLayer == null) return;
-            control.osLayer.CreateGrammar(name, options);
+            control.osLayer?.CreateGrammar(name, options);
         }
         internal void ActivateGrammar(string name)
         {
-            if (control.osLayer == null) return;
-            control.osLayer.ActivateGrammar(name);
+            control.osLayer?.ActivateGrammar(name);
         }
         internal void DeactivateGrammar(string name)
         {
-            if (control.osLayer == null) return;
-            control.osLayer.DeactivateGrammar(name);
+            control.osLayer?.DeactivateGrammar(name);
         }
     }
 }

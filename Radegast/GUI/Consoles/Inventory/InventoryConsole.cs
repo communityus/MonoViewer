@@ -32,6 +32,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 #if (COGBOT_LIBOMV || USE_STHREADS)
@@ -52,11 +53,11 @@ namespace Radegast
     public partial class InventoryConsole : UserControl
     {
         RadegastInstance instance;
-        GridClient client { get { return instance.Client; } }
+        GridClient client => instance.Client;
         Dictionary<UUID, TreeNode> FolderNodes = new Dictionary<UUID, TreeNode>();
 
         private InventoryManager Manager;
-        private OpenMetaverse.Inventory Inventory;
+        private Inventory Inventory;
         private TreeNode invRootNode;
         private string newItemName = string.Empty;
         private List<UUID> fetchedFolders = new List<UUID>();
@@ -100,7 +101,7 @@ namespace Radegast
             UpdateStatus("Reading cache");
             Init1();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         public void Init1()
@@ -173,7 +174,7 @@ namespace Radegast
             invTree.NodeMouseClick += new TreeNodeMouseClickEventHandler(invTree_MouseClick);
             invTree.NodeMouseDoubleClick += new TreeNodeMouseClickEventHandler(invTree_NodeMouseDoubleClick);
 
-            _EditTimer = new System.Threading.Timer(OnLabelEditTimer, null, System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
+            _EditTimer = new System.Threading.Timer(OnLabelEditTimer, null, Timeout.Infinite, Timeout.Infinite);
 
             // Callbacks
             Inventory.InventoryObjectAdded += new EventHandler<InventoryObjectAddedEventArgs>(Inventory_InventoryObjectAdded);
@@ -863,7 +864,7 @@ namespace Radegast
             Logger.Log("Finished updating invenory folders, saving cache...", Helpers.LogLevel.Debug, client);
             GestureManager.Instance.BeginMonitoring();
 
-            WorkPool.QueueUserWorkItem((object state) => Inventory.SaveToDisk(instance.InventoryCacheFileName));
+            WorkPool.QueueUserWorkItem(state => Inventory.SaveToDisk(instance.InventoryCacheFileName));
 
             if (!instance.MonoRuntime || IsHandleCreated)
                 Invoke(new MethodInvoker(() =>
@@ -940,7 +941,7 @@ namespace Radegast
                 }
             }
 
-            UpdateStatus("Loading... " + UUID2NodeCache.Count.ToString() + " items");
+            UpdateStatus("Loading... " + UUID2NodeCache.Count + " items");
         }
 
         #endregion
@@ -971,7 +972,7 @@ namespace Radegast
             txtItemDescription.Text = item.Description;
             txtCreator.AgentID = item.CreatorID;
             txtCreator.Tag = item.CreatorID;
-            txtCreated.Text = item.CreationDate.ToString();
+            txtCreated.Text = item.CreationDate.ToString(CultureInfo.InvariantCulture);
 
             txtAssetID.Text = item.AssetUUID != UUID.Zero ? item.AssetUUID.ToString() : string.Empty;
 
@@ -1280,7 +1281,7 @@ namespace Radegast
 
             if (IsAttached(item))
             {
-                raw += " (worn on " + AttachedTo(item).ToString() + ")";
+                raw += " (worn on " + AttachedTo(item) + ")";
             }
 
             return raw;
@@ -1736,12 +1737,12 @@ namespace Radegast
                         break;
 
                     case "new_notecard":
-                        client.Inventory.RequestCreateItem(f.UUID, "New Note", "Radegast note: " + DateTime.Now.ToString(),
+                        client.Inventory.RequestCreateItem(f.UUID, "New Note", "Radegast note: " + DateTime.Now.ToString(CultureInfo.InvariantCulture),
                             AssetType.Notecard, UUID.Zero, InventoryType.Notecard, PermissionMask.All, NotecardCreated);
                         break;
 
                     case "new_script":
-                        client.Inventory.RequestCreateItem(f.UUID, "New script", "Radegast script: " + DateTime.Now.ToString(),
+                        client.Inventory.RequestCreateItem(f.UUID, "New script", "Radegast script: " + DateTime.Now.ToString(CultureInfo.InvariantCulture),
                             AssetType.LSLText, UUID.Zero, InventoryType.LSL, PermissionMask.All, ScriptCreated);
                         break;
 
@@ -1772,12 +1773,12 @@ namespace Radegast
                                 trash = client.Inventory.CreateFolder(Inventory.RootFolder.UUID, "Trash", FolderType.Trash);
                                 trashCreated.WaitOne(20 * 1000, false);
                                 Thread.Sleep(200);
-                                client.Inventory.MoveFolder(f.UUID, trash, f.Name);
+                                client.Inventory.MoveFolder(f.UUID, trash);
                             });
                             return;
                         }
 
-                        client.Inventory.MoveFolder(f.UUID, trash, f.Name);
+                        client.Inventory.MoveFolder(f.UUID, trash);
                         break;
 
                     case "empty_trash":
@@ -2067,7 +2068,7 @@ namespace Radegast
                 {
                     if (instance.InventoryClipboard.Item.UUID != dest.UUID)
                     {
-                        client.Inventory.MoveFolder(instance.InventoryClipboard.Item.UUID, dest.UUID, instance.InventoryClipboard.Item.Name);
+                        client.Inventory.MoveFolder(instance.InventoryClipboard.Item.UUID, dest.UUID);
                     }
                 }
 
@@ -2077,14 +2078,14 @@ namespace Radegast
             {
                 if (instance.InventoryClipboard.Item is InventoryItem)
                 {
-                    client.Inventory.RequestCopyItem(instance.InventoryClipboard.Item.UUID, dest.UUID, instance.InventoryClipboard.Item.Name, instance.InventoryClipboard.Item.OwnerID, (InventoryBase target) =>
+                    client.Inventory.RequestCopyItem(instance.InventoryClipboard.Item.UUID, dest.UUID, instance.InventoryClipboard.Item.Name, instance.InventoryClipboard.Item.OwnerID, target =>
                     {
                     }
                     );
                 }
                 else if (instance.InventoryClipboard.Item is InventoryFolder)
                 {
-                    WorkPool.QueueUserWorkItem((object state) =>
+                    WorkPool.QueueUserWorkItem(state =>
                         {
                             UUID newFolderID = client.Inventory.CreateFolder(dest.UUID, instance.InventoryClipboard.Item.Name, FolderType.None);
                             Thread.Sleep(500);
@@ -2102,7 +2103,7 @@ namespace Radegast
                                 //names.Add(oldItem.Name);
                                 //items.Add(oldItem.UUID);
                                 //oldOwner = oldItem.OwnerID;
-                                client.Inventory.RequestCopyItem(oldItem.UUID, newFolderID, oldItem.Name, oldItem.OwnerID, (InventoryBase target) => { });
+                                client.Inventory.RequestCopyItem(oldItem.UUID, newFolderID, oldItem.Name, oldItem.OwnerID, target => { });
                             }
 
                             //if (folders.Count > 0)
@@ -2211,7 +2212,7 @@ namespace Radegast
             {
                 e.CancelEdit = true;
                 _EditNode = e.Node;
-                _EditTimer.Change(20, System.Threading.Timeout.Infinite);
+                _EditTimer.Change(20, Timeout.Infinite);
             }
         }
 
@@ -2231,7 +2232,7 @@ namespace Radegast
             {
                 InventoryFolder f = (InventoryFolder)e.Node.Tag;
                 f.Name = e.Label;
-                client.Inventory.MoveFolder(f.UUID, f.ParentUUID, f.Name);
+                client.Inventory.MoveFolder(f.UUID, f.ParentUUID);
             }
             else if (e.Node.Tag is InventoryItem)
             {
@@ -2270,12 +2271,12 @@ namespace Radegast
                 if (invTree.SelectedNode.Tag is InventoryItem)
                 {
                     InventoryItem item = invTree.SelectedNode.Tag as InventoryItem;
-                    client.Inventory.MoveItem(item.UUID, trash, item.Name);
+                    client.Inventory.MoveItem(item.UUID, trash);
                 }
                 else if (invTree.SelectedNode.Tag is InventoryFolder)
                 {
                     InventoryFolder f = invTree.SelectedNode.Tag as InventoryFolder;
-                    client.Inventory.MoveFolder(f.UUID, trash, f.Name);
+                    client.Inventory.MoveFolder(f.UUID, trash);
                 }
             }
             else if (e.KeyCode == Keys.Apps && invTree.SelectedNode != null)
@@ -2331,7 +2332,7 @@ namespace Radegast
             else if (sourceNode.Tag is InventoryFolder)
             {
                 InventoryFolder f = (InventoryFolder)sourceNode.Tag;
-                client.Inventory.MoveFolder(f.UUID, dest.UUID, f.Name);
+                client.Inventory.MoveFolder(f.UUID, dest.UUID);
             }
         }
 
@@ -2430,8 +2431,8 @@ namespace Radegast
 
             public SearchResult(InventoryBase inv, int level)
             {
-                this.Inv = inv;
-                this.Level = level;
+                Inv = inv;
+                Level = level;
             }
         }
 
@@ -2447,7 +2448,7 @@ namespace Radegast
             searchRes.Add(new SearchResult(me, level));
             var sorted = Inventory.GetContents(folderID);
 
-            sorted.Sort((InventoryBase b1, InventoryBase b2) =>
+            sorted.Sort((b1, b2) =>
             {
                 if (b1 is InventoryFolder && !(b2 is InventoryFolder))
                 {
@@ -2459,7 +2460,7 @@ namespace Radegast
                 }
                 else
                 {
-                    return string.Compare(b1.Name, b2.Name);
+                    return String.CompareOrdinal(b1.Name, b2.Name);
                 }
             });
 
@@ -2617,7 +2618,6 @@ namespace Radegast
             int offset = 20 * (res.Level + 1);
             Rectangle rec = new Rectangle(e.Bounds.X + offset, e.Bounds.Y, e.Bounds.Width - offset, e.Bounds.Height);
 
-            Image icon = null;
             int iconIx = 0;
 
             if (res.Inv is InventoryFolder)
@@ -2640,7 +2640,7 @@ namespace Radegast
 
             try
             {
-                icon = frmMain.ResourceImages.Images[iconIx];
+                var icon = frmMain.ResourceImages.Images[iconIx];
                 g.DrawImageUnscaled(icon, e.Bounds.X + offset - 18, e.Bounds.Y);
             }
             catch { }
@@ -2778,12 +2778,9 @@ namespace Radegast
     // Create a node sorter that implements the IComparer interface.
     public class InvNodeSorter : System.Collections.IComparer
     {
-        bool _sysfirst = true;
-        bool _bydate = true;
-
         int CompareFolders(InventoryFolder x, InventoryFolder y)
         {
-            if (_sysfirst)
+            if (SystemFoldersFirst)
             {
                 if (x.PreferredType != FolderType.None && y.PreferredType == FolderType.None)
                 {
@@ -2794,11 +2791,11 @@ namespace Radegast
                     return 1;
                 }
             }
-            return String.Compare(x.Name, y.Name);
+            return String.CompareOrdinal(x.Name, y.Name);
         }
 
-        public bool SystemFoldersFirst { set { _sysfirst = value; } get { return _sysfirst; } }
-        public bool ByDate { set { _bydate = value; } get { return _bydate; } }
+        public bool SystemFoldersFirst { set; get; } = true;
+        public bool ByDate { set; get; } = true;
 
         public int Compare(object x, object y)
         {
@@ -2827,7 +2824,7 @@ namespace Radegast
             InventoryItem item1 = (InventoryItem)tx.Tag;
             InventoryItem item2 = (InventoryItem)ty.Tag;
 
-            if (_bydate)
+            if (ByDate)
             {
                 if (item1.CreationDate < item2.CreationDate)
                 {
@@ -2838,7 +2835,7 @@ namespace Radegast
                     return -1;
                 }
             }
-            return string.Compare(item1.Name, item2.Name);
+            return String.CompareOrdinal(item1.Name, item2.Name);
         }
     }
     #endregion

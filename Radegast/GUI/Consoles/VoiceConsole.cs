@@ -30,10 +30,7 @@
 //
 using System;
 using System.Collections.Generic;
-using System.Collections;
-using System.ComponentModel;
 using System.Drawing;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Radegast.Netcom;
 using OpenMetaverse;
@@ -53,8 +50,8 @@ namespace Radegast
         };
 
         private RadegastInstance instance;
-        private RadegastNetcom netcom { get { return instance.Netcom; } }
-        private GridClient client { get { return instance.Client; } }
+        private RadegastNetcom netcom => instance.Netcom;
+        private GridClient client => instance.Client;
         private TabsConsole tabConsole;
         private OSDMap config;
         public VoiceGateway gateway = null;
@@ -86,14 +83,14 @@ namespace Radegast
             if (chkVoiceEnable.Checked)
                 Start();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         private void Start()
         {
             if (gateway == null)
             {
-                gateway = new VoiceGateway(this.instance.Client);
+                gateway = new VoiceGateway(instance.Client);
             }
 
             // Initialize progress bar
@@ -125,19 +122,16 @@ namespace Radegast
             lock (e.Menu)
             {
                 // Figure out what this menu applies to.
-                if (e.Menu.Selection is ListViewItem)
+                ListViewItem item = e.Menu.Selection as ListViewItem;
+                if (item?.Tag is VoiceParticipant)
                 {
-                    ListViewItem item = e.Menu.Selection as ListViewItem;
-                    if (item.Tag is VoiceParticipant)
-                    {
-                        selected = item.Tag as VoiceParticipant;
-                        ToolStripButton muteButton;
-                        if (selected.IsMuted)
-                            muteButton = new ToolStripButton("Unmute", null, new EventHandler(OnUnMuteClick));
-                        else
-                            muteButton = new ToolStripButton("Mute", null, new EventHandler(OnMuteClick));
-                        e.Menu.Items.Add(muteButton);
-                    }
+                    selected = item.Tag as VoiceParticipant;
+                    ToolStripButton muteButton;
+                    if (selected.IsMuted)
+                        muteButton = new ToolStripButton("Unmute", null, new EventHandler(OnUnMuteClick));
+                    else
+                        muteButton = new ToolStripButton("Mute", null, new EventHandler(OnMuteClick));
+                    e.Menu.Items.Add(muteButton);
                 }
             }
         }
@@ -458,7 +452,7 @@ namespace Radegast
         #region Talk control
         void OnMouseUp(object sender, MouseEventArgs e)
         {
-            this.BeginInvoke(new MethodInvoker(delegate()
+            BeginInvoke(new MethodInvoker(delegate()
             {
                 if (e.Button == MouseButtons.Left)
                 {
@@ -470,7 +464,7 @@ namespace Radegast
 
         void OnMouseDown(object sender, MouseEventArgs e)
         {
-            this.BeginInvoke(new MethodInvoker(delegate()
+            BeginInvoke(new MethodInvoker(delegate()
             {
 
                 if (e.Button == MouseButtons.Left)
@@ -542,7 +536,7 @@ namespace Radegast
         /// </summary>
         private void chkVoiceEnable_Click(object sender, EventArgs e)
         {
-            this.BeginInvoke(new MethodInvoker(delegate()
+            BeginInvoke(new MethodInvoker(delegate()
             {
                 config["enabled"] = new OSDBoolean(chkVoiceEnable.Checked);
                 instance.GlobalSettings.Save();

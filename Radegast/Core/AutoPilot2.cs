@@ -67,7 +67,6 @@ namespace Radegast
         private Vector3d myGlobalPosition;
         private List<Vector3d> waypoints = new List<Vector3d>();
         private int waypointIndex = 0;
-        private AutoPilotStatus status = AutoPilotStatus.Idle;
         private double waypointRadius = 2d;
         private Timer ticker = new Timer(500);
         private int stuckTimeout = 10000;
@@ -81,13 +80,7 @@ namespace Radegast
         /// <summary>
         /// The Status of the AutoPilot instance
         /// </summary>
-        public AutoPilotStatus Status
-        {
-            get
-            {
-                return status;
-            }
-        }
+        public AutoPilotStatus Status { get; private set; } = AutoPilotStatus.Idle;
 
         /// <summary>
         /// The Vector3d Waypoints in the AutoPilot instance
@@ -95,10 +88,7 @@ namespace Radegast
         /// <exception cref="ArgumentOutOfRangeException">Must have at least 2 Waypoints</exception>
         public List<Vector3d> Waypoints
         {
-            get
-            {
-                return waypoints;
-            }
+            get => waypoints;
             set
             {
                 if (value.Count > 1)
@@ -116,24 +106,12 @@ namespace Radegast
         /// <summary>
         /// The previous Vector3d Waypoint along the path. Returns Vector3d.Zero if there is no previous waypoint.
         /// </summary>
-        public Vector3d PreviousWaypoint
-        {
-            get
-            {
-                return waypointIndex >= 1 ? waypoints[waypointIndex - 1] : Vector3d.Zero;
-            }
-        }
+        public Vector3d PreviousWaypoint => waypointIndex >= 1 ? waypoints[waypointIndex - 1] : Vector3d.Zero;
 
         /// <summary>
         /// The next Vector3d Waypoint along the path. Returns Vector3d.Zero if there is no next waypoint.
         /// </summary>
-        public Vector3d NextWaypoint
-        {
-            get
-            {
-                return waypointIndex < waypoints.Count ? waypoints[waypointIndex] : Vector3d.Zero;
-            }
-        }
+        public Vector3d NextWaypoint => waypointIndex < waypoints.Count ? waypoints[waypointIndex] : Vector3d.Zero;
 
         /// <summary>
         /// The next Waypoint's index. A new value will immediately take effect if AutoPilot is not Idle
@@ -158,7 +136,7 @@ namespace Radegast
                     {
                         throw new ArgumentOutOfRangeException("NextWaypointIndex", "Value must be greater than or equal to 0 and less than the number of Waypoints");
                     }
-                    if (status != AutoPilotStatus.Idle)
+                    if (Status != AutoPilotStatus.Idle)
                     {
                         Client.Self.AutoPilotCancel();
                         SetStatus(AutoPilotStatus.Moving);
@@ -170,33 +148,18 @@ namespace Radegast
                     throw new Exception("Must have at least 2 Waypoints");
                 }
             }
-            get
-            {
-                return waypointIndex;
-            }
+            get => waypointIndex;
         }
 
         /// <summary>
         /// The next Waypoint's index
         /// </summary>
-        public bool NextWaypointIsFinal
-        {
-            get
-            {
-                return waypointIndex == (waypoints.Count - 1);
-            }
-        }
+        public bool NextWaypointIsFinal => waypointIndex == (waypoints.Count - 1);
 
         /// <summary>
         /// Returns true if next Waypoint is the Start
         /// </summary>
-        public bool NextWaypointIsStart
-        {
-            get
-            {
-                return waypointIndex == 0 && waypoints.Count > 1;
-            }
-        }
+        public bool NextWaypointIsStart => waypointIndex == 0 && waypoints.Count > 1;
 
         /// <summary>
         /// The Waypoint detection radius
@@ -204,10 +167,7 @@ namespace Radegast
         /// <exception cref="ArgumentOutOfRangeException">WaypointRadius must be greater than 0</exception>
         public double WaypointRadius
         {
-            get
-            {
-                return waypointRadius;
-            }
+            get => waypointRadius;
             set
             {
                 if (value > 0)
@@ -227,10 +187,7 @@ namespace Radegast
         /// <exception cref="ArgumentOutOfRangeException">StuckTimeout must be greater than 0</exception>
         public int StuckTimeout
         {
-            get
-            {
-                return stuckTimeout;
-            }
+            get => stuckTimeout;
             set
             {
                 if (value > 0)
@@ -264,7 +221,7 @@ namespace Radegast
         public AutoPilot2(GridClient client)
         {
             Client = client;
-            Client.Objects.TerseObjectUpdate += new System.EventHandler<TerseObjectUpdateEventArgs>(Objects_TerseObjectUpdate);
+            Client.Objects.TerseObjectUpdate += new EventHandler<TerseObjectUpdateEventArgs>(Objects_TerseObjectUpdate);
             ticker.Elapsed += new ElapsedEventHandler(ticker_Elapsed);
         }
 
@@ -317,7 +274,7 @@ namespace Radegast
         {
             if (waypoints.Count > 1)
             {
-                if (status == AutoPilotStatus.Idle)
+                if (Status == AutoPilotStatus.Idle)
                 {
                     ticker.Start();
                     return MoveToNextWaypoint(false);
@@ -359,7 +316,7 @@ namespace Radegast
         /// <returns>Next Waypoint index</returns>
         public int Pause()
         {
-            if (status == AutoPilotStatus.Moving)
+            if (Status == AutoPilotStatus.Moving)
             {
                 ticker.Stop();
                 Client.Self.AutoPilotCancel();
@@ -379,7 +336,7 @@ namespace Radegast
         /// <returns>Next Waypoint index</returns>
         public int Resume()
         {
-            if (status == AutoPilotStatus.Paused)
+            if (Status == AutoPilotStatus.Paused)
             {
                 ticker.Start();
                 return MoveToNextWaypoint(false);
@@ -415,7 +372,7 @@ namespace Radegast
             }
             else
             {
-                throw new ArgumentOutOfRangeException("newStatus", "Value cannot be Moving");
+                throw new ArgumentOutOfRangeException(nameof(newStatus), "Value cannot be Moving");
             }
         }
         #endregion Public Methods
@@ -428,20 +385,14 @@ namespace Radegast
         /// <returns>True if OnStatusChanged triggered</returns>
         private bool SetStatus(AutoPilotStatus newStatus)
         {
-            AutoPilotStatus oldStatus = status;
+            AutoPilotStatus oldStatus = Status;
             if (oldStatus != newStatus)
             {
-                status = newStatus;
-                if (OnStatusChange != null)
-                {
-                    OnStatusChange(status, NextWaypoint);
-                }
+                Status = newStatus;
+                OnStatusChange?.Invoke(Status, NextWaypoint);
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         /// <summary>
@@ -449,7 +400,7 @@ namespace Radegast
         /// </summary>
         private void Objects_TerseObjectUpdate(object sender, TerseObjectUpdateEventArgs e)
         {
-            if (status == AutoPilotStatus.Moving && e.Update.Avatar && e.Update.LocalID == Client.Self.LocalID)
+            if (Status == AutoPilotStatus.Moving && e.Update.Avatar && e.Update.LocalID == Client.Self.LocalID)
             {
                 uint regionX, regionY;
                 Utils.LongToUInts(e.Simulator.Handle, out regionX, out regionY);
@@ -466,10 +417,7 @@ namespace Radegast
                     }
                     else
                     {
-                        if (OnWaypointArrival != null)
-                        {
-                            OnWaypointArrival(NextWaypoint);
-                        }
+                        OnWaypointArrival?.Invoke(NextWaypoint);
                         MoveToNextWaypoint();
                     }
                 }
@@ -481,17 +429,16 @@ namespace Radegast
         /// </summary>
         private void ticker_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (status == AutoPilotStatus.Moving)
+            if (Status == AutoPilotStatus.Moving)
             {
                 int distance = (int)Vector3d.Distance(myGlobalPosition, NextWaypoint);
                 if (distance != lastDistance || lastDistanceChanged < 0)
                 {
                     lastDistance = distance;
-                    lastDistanceChanged = System.Environment.TickCount;
+                    lastDistanceChanged = Environment.TickCount;
                 }
-                else if (Math.Abs(System.Environment.TickCount - lastDistanceChanged) > stuckTimeout)
+                else if (Math.Abs(Environment.TickCount - lastDistanceChanged) > stuckTimeout)
                 {
-                    Vector3d nextWaypoint = NextWaypoint;
                     Stop(AutoPilotStatus.Failed);
                 }
             }

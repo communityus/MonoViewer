@@ -30,11 +30,10 @@
 //
 using System;
 using System.Collections.Generic;
-using System.Text;
 using FMOD;
 using System.Threading;
 using OpenMetaverse;
-using OpenMetaverse.Assets;
+
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
@@ -49,8 +48,8 @@ namespace Radegast.Media
         /// <summary>
         /// Indicated wheather spund sytem is ready for use
         /// </summary>
-        public bool SoundSystemAvailable => soundSystemAvailable;
-        private bool soundSystemAvailable = false;
+        public bool SoundSystemAvailable { get; private set; } = false;
+
         private Thread soundThread;
         private Thread listenerThread;
         public RadegastInstance Instance;
@@ -59,18 +58,17 @@ namespace Radegast.Media
         ManualResetEvent initDone = new ManualResetEvent(false);
 
         public MediaManager(RadegastInstance instance)
-            : base()
         {
-            this.Instance = instance;
+            Instance = instance;
             manager = this;
 
             if (MainProgram.CommandLineOpts.DisableSound)
             {
-                soundSystemAvailable = false;
+                SoundSystemAvailable = false;
                 return;
             }
 
-            endCallback = new FMOD.CHANNEL_CALLBACK(DispatchEndCallback);
+            endCallback = new CHANNEL_CALLBACK(DispatchEndCallback);
             allBuffers = new Dictionary<UUID, BufferSound>();
 
             // Start the background thread that does all the FMOD calls.
@@ -147,7 +145,7 @@ namespace Radegast.Media
             // Initialize the FMOD sound package
             InitFMOD();
             initDone.Set();
-            if (!this.soundSystemAvailable) return;
+            if (!SoundSystemAvailable) return;
 
             SoundDelegate action = null;
 
@@ -184,21 +182,21 @@ namespace Radegast.Media
         {
             try
             {
-                FMODExec(FMOD.Factory.System_Create(out system));
+                FMODExec(Factory.System_Create(out system));
                 uint version = 0;
                 FMODExec(system.getVersion(out version));
 
-                if (version < FMOD.VERSION.number)
+                if (version < VERSION.number)
                     throw new MediaException("You are using an old version of FMOD " +
                         version.ToString("X") +
                         ".  This program requires " +
-                        FMOD.VERSION.number.ToString("X") + ".");
+                        VERSION.number.ToString("X") + ".");
 
                 // Try to detect soud system used
-                if (System.Environment.OSVersion.Platform == PlatformID.Unix || System.Environment.OSVersion.Platform == PlatformID.MacOSX)
+                if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
                 {
                     bool audioOK = false;
-                    var res = system.setOutput(FMOD.OUTPUTTYPE.COREAUDIO);
+                    var res = system.setOutput(OUTPUTTYPE.COREAUDIO);
                     if (res == RESULT.OK)
                     {
                         audioOK = true;
@@ -206,7 +204,7 @@ namespace Radegast.Media
 
                     if (!audioOK)
                     {
-                        res = system.setOutput(FMOD.OUTPUTTYPE.PULSEAUDIO);
+                        res = system.setOutput(OUTPUTTYPE.PULSEAUDIO);
                         if (res == RESULT.OK)
                         {
                             audioOK = true;
@@ -215,7 +213,7 @@ namespace Radegast.Media
 
                     if (!audioOK)
                     {
-                        res = system.setOutput(FMOD.OUTPUTTYPE.ALSA);
+                        res = system.setOutput(OUTPUTTYPE.ALSA);
                         if (res == RESULT.OK)
                         {
                             audioOK = true;
@@ -224,7 +222,7 @@ namespace Radegast.Media
 
                     if (!audioOK)
                     {
-                        res = system.setOutput(FMOD.OUTPUTTYPE.AUTODETECT);
+                        res = system.setOutput(OUTPUTTYPE.AUTODETECT);
                         if (res == RESULT.OK)
                         {
                             audioOK = true;
@@ -233,7 +231,7 @@ namespace Radegast.Media
 
                 }
 
-                FMOD.OUTPUTTYPE outputType = OUTPUTTYPE.UNKNOWN;
+                OUTPUTTYPE outputType = OUTPUTTYPE.UNKNOWN;
                 FMODExec(system.getOutput(out outputType));
 
 // *TODO: Investigate if this all is still needed under FMODStudio
@@ -270,8 +268,8 @@ namespace Radegast.Media
                 // FMODExec(system.setDSPBufferSize(1024, 10));
 
                 // Try to initialize with all those settings, and Max 32 channels.
-                FMOD.RESULT result = system.init(32, FMOD.INITFLAGS.NORMAL, (IntPtr)null);
-                if (result != FMOD.RESULT.OK)
+                RESULT result = system.init(32, INITFLAGS.NORMAL, (IntPtr)null);
+                if (result != RESULT.OK)
                 {
                     throw(new Exception(result.ToString()));
                 }
@@ -283,7 +281,7 @@ namespace Radegast.Media
                     1.0f)   // Rolloff factor
                 );
 
-                soundSystemAvailable = true;
+                SoundSystemAvailable = true;
                 Logger.Log("Initialized FMOD Ex: " + outputType, Helpers.LogLevel.Debug);
             }
             catch (Exception ex)
@@ -376,7 +374,7 @@ namespace Radegast.Media
                 lastface = newFace;
 
                 // Convert coordinate spaces.
-                FMOD.VECTOR listenerpos = FromOMVSpace(newPosition);
+                VECTOR listenerpos = FromOMVSpace(newPosition);
 
                 // Get azimuth from the facing Quaternion.  Note we assume the
                 // avatar is standing upright.  Avatars in unusual positions
@@ -387,7 +385,7 @@ namespace Radegast.Media
 
                 // Construct facing unit vector in FMOD coordinates.
                 // Z is East, X is South, Y is up.
-                FMOD.VECTOR forward = new FMOD.VECTOR
+                VECTOR forward = new VECTOR
                 {
                     x = (float) Math.Sin(angle),
                     y = 0.0f,
@@ -594,7 +592,7 @@ namespace Radegast.Media
                 AllObjectVolume = value;
                 BufferSound.AdjustVolumes();
             }
-            get { return AllObjectVolume; }
+            get => AllObjectVolume;
         }
 
         /// <summary>
@@ -627,7 +625,7 @@ namespace Radegast.Media
 
                 m_objectEnabled = value;
             }
-            get { return m_objectEnabled; }
+            get => m_objectEnabled;
         }
 
         void Self_ChatFromSimulator(object sender, ChatEventArgs e)
@@ -660,7 +658,7 @@ namespace Radegast.Media
         /// <param name="sound">UUID of the sound to play</param>
         public void PlayUISound(UUID sound)
         {
-            if (!soundSystemAvailable) return;
+            if (!SoundSystemAvailable) return;
 
             new BufferSound(
                 UUID.Random(),

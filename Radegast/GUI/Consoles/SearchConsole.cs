@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using OpenMetaverse;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Radegast
 {
@@ -40,7 +41,7 @@ namespace Radegast
     {
         #region Private members
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
+        private GridClient client => instance.Client;
 
         private FindPeopleConsole console;
 
@@ -76,7 +77,7 @@ namespace Radegast
             lvwPlaces.ListViewItemSorter = new PlaceSorter();
             lvwGroups.ListViewItemSorter = new GroupSorter();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void SearchConsole_Disposed(object sender, EventArgs e)
@@ -109,7 +110,7 @@ namespace Radegast
             if (console.QueryID != e.QueryID) return;
 
             totalResults += e.MatchedPeople.Count;
-            lblResultCount.Text = totalResults.ToString() + " people found";
+            lblResultCount.Text = totalResults + " people found";
 
             txtPersonName.Enabled = true;
             btnFind.Enabled = true;
@@ -219,11 +220,13 @@ namespace Radegast
             {
                 if (parcel.ID == UUID.Zero) continue;
 
-                ListViewItem item = new ListViewItem();
-                item.Name = parcel.ID.ToString();
-                item.Text = parcel.Name;
-                item.Tag = parcel;
-                item.SubItems.Add(new ListViewItem.ListViewSubItem(item, parcel.Dwell.ToString()));
+                ListViewItem item = new ListViewItem
+                {
+                    Name = parcel.ID.ToString(),
+                    Text = parcel.Name,
+                    Tag = parcel
+                };
+                item.SubItems.Add(new ListViewItem.ListViewSubItem(item, parcel.Dwell.ToString(CultureInfo.InvariantCulture)));
                 lvwPlaces.Items.Add(item);
             }
             lvwPlaces.Sort();
@@ -238,7 +241,7 @@ namespace Radegast
                 placeMatches -= 1;
 
             lblNrPlaces.Visible = true;
-            lblNrPlaces.Text = string.Format("{0} places found", placeMatches > 100 ? "More than " + (placeStart + 100).ToString() : (placeStart + placeMatches).ToString());
+            lblNrPlaces.Text = string.Format("{0} places found", placeMatches > 100 ? "More than " + (placeStart + 100) : (placeStart + placeMatches).ToString());
 
 
         }
@@ -321,10 +324,7 @@ namespace Radegast
                 switch (SortBy)
                 {
                     case SortByColumn.Name:
-                        if (CurrentOrder == SortOrder.Ascending)
-                            return string.Compare(item1.Text, item2.Text);
-                        else
-                            return string.Compare(item2.Text, item1.Text);
+                        return CurrentOrder == SortOrder.Ascending ? String.CompareOrdinal(item1.Text, item2.Text) : String.CompareOrdinal(item2.Text, item1.Text);
 
                     case SortByColumn.Traffic:
                         if (CurrentOrder == SortOrder.Ascending)
@@ -431,7 +431,7 @@ namespace Radegast
                 groupMatches -= 1;
 
             lblNrGroups.Visible = true;
-            lblNrGroups.Text = string.Format("{0} groups found", groupMatches > 100 ? "More than " + (groupStart + 100).ToString() : (groupStart + groupMatches).ToString());
+            lblNrGroups.Text = string.Format("{0} groups found", groupMatches > 100 ? "More than " + (groupStart + 100) : (groupStart + groupMatches).ToString());
         }
 
         private void btnSearchGroup_Click(object sender, EventArgs e)
@@ -552,10 +552,9 @@ namespace Radegast
                 switch (SortBy)
                 {
                     case SortByColumn.Name:
-                        if (CurrentOrder == SortOrder.Ascending)
-                            return string.Compare(item1.Text, item2.Text);
-                        else
-                            return string.Compare(item2.Text, item1.Text);
+                        return CurrentOrder == SortOrder.Ascending 
+                            ? String.CompareOrdinal(item1.Text, item2.Text) 
+                            : String.CompareOrdinal(item2.Text, item1.Text);
 
                     case SortByColumn.Members:
                         if (CurrentOrder == SortOrder.Ascending)
@@ -610,7 +609,7 @@ namespace Radegast
                 if (evt.ID == 0) continue;
 
                 ListViewItem item = new ListViewItem();
-                item.Name = "evt" + evt.ID.ToString();
+                item.Name = "evt" + evt.ID;
                 item.Text = evt.Name;
                 item.Tag = evt;
                 item.SubItems.Add(new ListViewItem.ListViewSubItem(item, evt.Date));
@@ -629,7 +628,7 @@ namespace Radegast
                 eventMatches -= 1;
 
             lblNrEvents.Visible = true;
-            lblNrEvents.Text = string.Format("{0} events found", eventMatches > eventsPerPage ? "More than " + (eventStart + eventsPerPage).ToString() : (eventStart + eventMatches).ToString());
+            lblNrEvents.Text = string.Format("{0} events found", eventMatches > eventsPerPage ? "More than " + (eventStart + eventsPerPage) : (eventStart + eventMatches).ToString());
         }
 
 
@@ -713,8 +712,8 @@ namespace Radegast
                     DirectoryManager.EventsSearchData e2 = (DirectoryManager.EventsSearchData)((ListViewItem)b).Tag;
 
                     if (e1.Time < e2.Time) return -1;
-                    else if (e1.Time > e2.Time) return 1;
-                    else return string.Compare(e1.Name, e2.Name);
+                    if (e1.Time > e2.Time) return 1;
+                    return String.CompareOrdinal(e1.Name, e2.Name);
                 }
                 catch { }
                 return 0;
@@ -748,7 +747,7 @@ namespace Radegast
             txtEventName.Text = evt.Name;
             txtEventType.Text = evt.Category.ToString();
             txtEventMaturity.Text = evt.Flags.ToString();
-            txtEventDate.Text = OpenMetaverse.Utils.UnixTimeToDateTime(evt.DateUTC).ToString("r");
+            txtEventDate.Text = Utils.UnixTimeToDateTime(evt.DateUTC).ToString("r");
             txtEventDuration.Text = string.Format("{0}:{1:00}", evt.Duration / 60u, evt.Duration % 60u);
             txtEventOrganizer.Text = instance.Names.Get(evt.Creator, string.Empty);
             txtEventOrganizer.Tag = evt.Creator;
@@ -785,7 +784,7 @@ namespace Radegast
         {
             var evt = (DirectoryManager.EventInfo)pnlEventDetail.Tag;
             float localX, localY;
-            ulong handle = OpenMetaverse.Helpers.GlobalPosToRegionHandle((float)evt.GlobalPos.X, (float)evt.GlobalPos.Y, out localX, out localY);
+            ulong handle = Helpers.GlobalPosToRegionHandle((float)evt.GlobalPos.X, (float)evt.GlobalPos.Y, out localX, out localY);
             client.Self.Teleport(handle, new Vector3(localX, localY, (float)evt.GlobalPos.Z));
         }
 

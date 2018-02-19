@@ -30,9 +30,6 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using OpenMetaverse;
 using OpenTK.Graphics.OpenGL;
@@ -75,7 +72,7 @@ namespace Radegast.Rendering
                     ID = -1;
                     return false;
                 }
-                Logger.DebugLog(string.Format("{0} {1} compiled successfully", type.ToString(), fileName));
+                Logger.DebugLog(string.Format("{0} {1} compiled successfully", type, fileName));
                 return true;
             }
             catch

@@ -1,7 +1,4 @@
-using System;
 using System.Windows.Forms;
-
-using AIMLbot;
 using AIMLBot = AIMLbot.Bot;
 
 using OpenMetaverse;
@@ -37,10 +34,7 @@ namespace Radegast.Plugin.Alice
             return (a != null && !string.IsNullOrEmpty(a.Name)) || base.IsEnabled(target);
         }
 
-        protected bool IsEnabledInRadegast
-        {
-            get { return Instance.GlobalSettings["plugin.alice.enabled"].AsBoolean();  }
-        }
+        protected bool IsEnabledInRadegast => Instance.GlobalSettings["plugin.alice.enabled"].AsBoolean();
 
         public override void OnInvoke(object sender, System.EventArgs e, object target)
         {

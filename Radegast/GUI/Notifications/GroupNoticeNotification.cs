@@ -36,7 +36,7 @@ namespace Radegast
     public partial class ntfGroupNotice : Notification
     {
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
+        private GridClient client => instance.Client;
         private InstantMessage msg;
         private AssetType type = AssetType.Unknown;
         private UUID destinationFolderID;
@@ -97,7 +97,7 @@ namespace Radegast
                 client.Groups.RequestGroupProfile(groupID);
             }
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         private void ShowNotice()
@@ -114,7 +114,7 @@ namespace Radegast
                 lblSentBy.Text, System.Environment.NewLine,
                 txtNotice.Text
                 );
-            if (btnSave.Visible == true)
+            if (btnSave.Visible)
             {
                 args.Buttons.Add(btnSave);
                 args.Text += string.Format("{0}Attachment: {1}", System.Environment.NewLine, txtItemName.Text);

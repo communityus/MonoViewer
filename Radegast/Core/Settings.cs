@@ -168,36 +168,24 @@ namespace Radegast
 
             public string ForeColorString
             {
-                get
-                {
-                    return ColorTranslator.ToHtml(ForeColor);
-                }
-                set
-                {
-                    ForeColor = ColorTranslator.FromHtml(value);
-                }
+                get => ColorTranslator.ToHtml(ForeColor);
+                set => ForeColor = ColorTranslator.FromHtml(value);
             }
 
             public string BackColorString
             {
-                get
-                {
-                    return ColorTranslator.ToHtml(BackColor);
-                }
-                set
-                {
-                    BackColor = ColorTranslator.FromHtml(value);
-                }
+                get => ColorTranslator.ToHtml(BackColor);
+                set => BackColor = ColorTranslator.FromHtml(value);
             }
 
             public string FontString
             {
                 get
                 {
-                    if (this.Font != null)
+                    if (Font != null)
                     {
                         TypeConverter converter = TypeDescriptor.GetConverter(typeof(Font));
-                        return converter.ConvertToString(this.Font);
+                        return converter.ConvertToString(Font);
                     }
                     return null;
                 }
@@ -206,11 +194,11 @@ namespace Radegast
                     try
                     {
                         TypeConverter converter = TypeDescriptor.GetConverter(typeof(Font));
-                        this.Font = converter.ConvertFromString(value) as Font;
+                        Font = converter.ConvertFromString(value) as Font;
                     }
                     catch (Exception)
                     {
-                        this.Font = DefaultFont;
+                        Font = DefaultFont;
                     }
 
                 }
@@ -283,21 +271,19 @@ namespace Radegast
 
         #region IDictionary Implementation
 
-        public int Count { get { return SettingsData.Count; } }
-        public bool IsReadOnly { get { return false; } }
-        public ICollection<string> Keys { get { return SettingsData.Keys; } }
-        public ICollection<OSD> Values { get { return SettingsData.Values; } }
+        public int Count => SettingsData.Count;
+        public bool IsReadOnly => false;
+        public ICollection<string> Keys => SettingsData.Keys;
+        public ICollection<OSD> Values => SettingsData.Values;
+
         public OSD this[string key]
         {
-            get
-            {
-                return SettingsData[key];
-            }
+            get => SettingsData[key];
             set 
             {
                 if (string.IsNullOrEmpty(key))
                 {
-                    Logger.DebugLog("Warning: trying to set an emprty setting: " + Environment.StackTrace.ToString());
+                    Logger.DebugLog("Warning: trying to set an emprty setting: " + Environment.StackTrace);
                 }
                 else
                 {
@@ -366,7 +352,7 @@ namespace Radegast
             return ret;
         }
 
-        public System.Collections.IDictionaryEnumerator GetEnumerator()
+        public IDictionaryEnumerator GetEnumerator()
         {
             return SettingsData.GetEnumerator();
         }

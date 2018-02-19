@@ -52,8 +52,8 @@ namespace Radegast.Rendering
 
         public ChatOverlay(RadegastInstance instance, SceneWindow window)
         {
-            this.Instance = instance;
-            this.Window = window;
+            Instance = instance;
+            Window = window;
             Instance.TabConsole.MainChatManger.ChatLineAdded += new EventHandler<ChatLineAddedArgs>(MainChatManger_ChatLineAdded);
             chatLines = new Queue<ChatLine>();
         }
@@ -192,7 +192,7 @@ namespace Radegast.Rendering
         public int ImgWidth;
         public int ImgHeight;
 
-        public ChatBufferTextStyle Style { get { return item.Style; } }
+        public ChatBufferTextStyle Style => item.Style;
 
         int textureID = -1;
         int widthForTextureGenerated = -1;
@@ -201,7 +201,7 @@ namespace Radegast.Rendering
         public ChatLine(ChatBufferItem item, float timeAdded)
         {
             this.item = item;
-            this.TimeAdded = timeAdded;
+            TimeAdded = timeAdded;
         }
 
         public void Dispose()

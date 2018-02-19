@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -399,7 +397,7 @@ namespace RadegastSpeech.Talk
             root = r;
             rateModification = rate;
             pitchModification = pitch;
-            this.Male = root.Male;
+            Male = root.Male;
         }
     }
 }

@@ -32,7 +32,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using OpenMetaverse.StructuredData;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
@@ -49,8 +48,8 @@ namespace Radegast
     public partial class MasterTab : UserControl
     {
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
-        private RadegastNetcom netcom { get { return instance.Netcom; } }
+        private GridClient client => instance.Client;
+        private RadegastNetcom netcom => instance.Netcom;
         private Avatar avatar;
         public UUID selectedID;
         public Primitive selectedPrim;
@@ -73,7 +72,7 @@ namespace Radegast
             client.Avatars.ViewerEffectPointAt += new EventHandler<ViewerEffectPointAtEventArgs>(Avatars_ViewerEffectPointAt);
             client.Objects.ObjectProperties += new EventHandler<ObjectPropertiesEventArgs>(Objects_ObjectProperties);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void MasterTab_Disposed(object sender, EventArgs e)
@@ -201,7 +200,7 @@ namespace Radegast
             int nTextures = 0;
 
             foreach (UUID textureID in textures) {
-                SLImageHandler img = new SLImageHandler(instance, textureID, "Texture " + (nTextures + 1).ToString());
+                SLImageHandler img = new SLImageHandler(instance, textureID, "Texture " + (nTextures + 1));
                 img.Location = new Point(0, nTextures++ * img.Height);
                 img.Dock = DockStyle.Top;
                 img.Height = 450;
@@ -223,32 +222,35 @@ namespace Radegast
 
         private void saveBtn_Click(object sender, EventArgs e)
         {
-            WindowWrapper mainWindow = new WindowWrapper(frmMain.ActiveForm.Handle);
-            System.Windows.Forms.SaveFileDialog dlg = new SaveFileDialog();
-            dlg.AddExtension = true;
-            dlg.RestoreDirectory = true;
-            dlg.Title = "Save object as...";
-            dlg.Filter = "XML file (*.xml)|*.xml";
+            if (Form.ActiveForm == null) return;
+            WindowWrapper mainWindow = new WindowWrapper(Form.ActiveForm.Handle);
+            SaveFileDialog dlg = new SaveFileDialog
+            {
+                AddExtension = true,
+                RestoreDirectory = true,
+                Title = "Save object as...",
+                Filter = "XML file (*.xml)|*.xml"
+            };
             DialogResult res = dlg.ShowDialog();
 
             if (res == DialogResult.OK)
             {
                 Thread t = new Thread(new ThreadStart(delegate()
+                {
+                    try
                     {
-                        try
-                        {
-                            PrimSerializer s = new PrimSerializer(client);
-                            string primsXmls = s.GetSerializedPrims(client.Network.CurrentSim, selectedPrim.LocalID);
-                            System.IO.File.WriteAllText(dlg.FileName, primsXmls);
-                            s.CleanUp();
-                            s = null;
-                            MessageBox.Show(mainWindow, "Successfully saved " + dlg.FileName, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                        catch (Exception excp)
-                        {
-                            MessageBox.Show(mainWindow, excp.Message, "Saving failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    }));
+                        PrimSerializer s = new PrimSerializer(client);
+                        string primsXmls = s.GetSerializedPrims(client.Network.CurrentSim, selectedPrim.LocalID);
+                        System.IO.File.WriteAllText(dlg.FileName, primsXmls);
+                        s.CleanUp();
+                        s = null;
+                        MessageBox.Show(mainWindow, "Successfully saved " + dlg.FileName, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception excp)
+                    {
+                        MessageBox.Show(mainWindow, excp.Message, "Saving failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }));
                 t.IsBackground = true;
                 t.Start();
             }
@@ -275,19 +277,14 @@ namespace Radegast
 
     }
 
-    public class WindowWrapper : System.Windows.Forms.IWin32Window
+    public class WindowWrapper : IWin32Window
     {
         public WindowWrapper(IntPtr handle)
         {
-            _hwnd = handle;
+            Handle = handle;
         }
 
-        public IntPtr Handle
-        {
-            get { return _hwnd; }
-        }
-
-        private IntPtr _hwnd;
+        public IntPtr Handle { get; }
     }
 
 }

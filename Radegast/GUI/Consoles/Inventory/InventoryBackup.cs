@@ -29,7 +29,6 @@
 // $Id: RadegastInstance.cs 152 2009-08-24 14:19:58Z latifer@gmail.com $
 //
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 #if (COGBOT_LIBOMV || USE_STHREADS)
@@ -49,7 +48,7 @@ namespace Radegast
     public partial class InventoryBackup : Form
     {
         private RadegastInstance instance;
-        GridClient client { get { return instance.Client; } }
+        GridClient client => instance.Client;
         private Inventory inv;
         private Thread backupThread;
         private string folderName;
@@ -61,7 +60,7 @@ namespace Radegast
         public InventoryBackup(RadegastInstance instance, UUID rootFolder)
         {
             InitializeComponent();
-            Disposed += new System.EventHandler(InventoryBackup_Disposed);
+            Disposed += new EventHandler(InventoryBackup_Disposed);
 
             this.instance = instance;
 
@@ -72,10 +71,10 @@ namespace Radegast
                 rootNode = inv.GetNodeFor(rootFolder);
             }
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
-        void InventoryBackup_Disposed(object sender, System.EventArgs e)
+        void InventoryBackup_Disposed(object sender, EventArgs e)
         {
 
         }
@@ -99,7 +98,7 @@ namespace Radegast
             }
         }
 
-        private void btnFolder_Click(object sender, System.EventArgs e)
+        private void btnFolder_Click(object sender, EventArgs e)
         {
             openFileDialog1.CheckFileExists = false;
             DialogResult res = openFileDialog1.ShowDialog();
@@ -265,7 +264,7 @@ namespace Radegast
                                 }
                                 else
                                 {
-                                    client.Assets.RequestInventoryAsset(item, true, (AssetDownload transfer, Asset asset) =>
+                                    client.Assets.RequestInventoryAsset(item, true, (transfer, asset) =>
                                         {
                                             if (transfer.Success)
                                             {

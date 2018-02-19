@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Radegast;
 using System.Windows.Forms;
 
@@ -75,7 +72,7 @@ namespace RadegastSpeech.Conversation
         void note_OnNotificationClicked(object sender, EventArgs e, NotificationEventArgs notice)
         {
             Button b = sender as Button;
-            Talker.SayMore( b.Text, RadegastSpeech.Talk.BeepType.Good);
+            Talker.SayMore( b.Text, Talk.BeepType.Good);
         }
 
         void ReadOptions()

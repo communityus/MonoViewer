@@ -29,10 +29,7 @@
 // $Id: DettachableControl.cs 211 2009-09-09 06:46:18Z latifer@gmail.com $
 //
 using System;
-using System.Threading;
-using System.Collections.Generic;
 using System.Windows.Forms;
-using System.Text;
 using System.ComponentModel;
 using System.Drawing;
 using OpenMetaverse;
@@ -54,10 +51,7 @@ namespace Radegast
         ]
         public bool AutoSavePosition
         {
-            get
-            {
-                return autoSavePosition;
-            }
+            get => autoSavePosition;
 
             set
             {
@@ -85,41 +79,35 @@ namespace Radegast
                     return settingsKeyBase;
             }
 
-            set
-            {
-                settingsKeyBase = value;
-            }
+            set => settingsKeyBase = value;
         }
         private string settingsKeyBase = string.Empty;
 
         /// <summary>
         /// Instance of Radegast
         /// </summary>
-        protected RadegastInstance Instance { get { return instance; } }
-        private RadegastInstance instance = null;
+        protected RadegastInstance Instance { get; } = null;
 
         /// <summary>
         /// Instance of OpenMetaverse's GridClient
         /// </summary>
-        protected GridClient Client { get { return instance.Client; } }
+        protected GridClient Client => Instance.Client;
 
         /// <summary>
         /// Instance of RadegastNetcom
         /// </summary>
-        protected RadegastNetcom Netcom { get { return instance.Netcom; } }
+        protected RadegastNetcom Netcom => Instance.Netcom;
 
         private System.Threading.Timer SettingsTimer;
         private const int SettingsTimerTimeout = 500;
 
         public RadegastForm()
-            : base()
         {
         }
 
         public RadegastForm(RadegastInstance instance)
-            : base()
         {
-            this.instance = instance;
+            Instance = instance;
             instance.OnRadegastFormCreated(this);
         }
 
@@ -147,7 +135,7 @@ namespace Radegast
 
         protected void SavePosition()
         {
-            if (instance == null) return;
+            if (Instance == null) return;
 
             Instance.GlobalSettings[GetSettingsKey("left")] = OSD.FromInteger(Left);
             Instance.GlobalSettings[GetSettingsKey("top")] = OSD.FromInteger(Top);
@@ -157,7 +145,7 @@ namespace Radegast
 
         protected void ClearSavedPosition()
         {
-            if (instance == null) return;
+            if (Instance == null) return;
 
             Instance.GlobalSettings.Remove(GetSettingsKey("left"));
             Instance.GlobalSettings.Remove(GetSettingsKey("top"));
@@ -167,7 +155,7 @@ namespace Radegast
 
         protected void RestoreSavedPosition()
         {
-            if (instance == null) return;
+            if (Instance == null) return;
 
             int left = Left, top = Top, width = Width, height = Height;
 
@@ -227,12 +215,9 @@ namespace Radegast
 
         private void TriggerSavePosition()
         {
-            if (SettingsTimer != null)
-            {
-                SettingsTimer.Change(
-                    SettingsTimerTimeout,
-                    System.Threading.Timeout.Infinite);
-            }
+            SettingsTimer?.Change(
+                SettingsTimerTimeout,
+                System.Threading.Timeout.Infinite);
         }
 
         private void SettingsTimer_Tick(object e)

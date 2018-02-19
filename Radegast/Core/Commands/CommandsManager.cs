@@ -41,7 +41,7 @@ using OpenMetaverse;
 
 namespace Radegast.Commands
 {
-    public class CommandsManager : ICommandInterpreter, IDisposable
+    public class CommandsManager : ICommandInterpreter
     {
         public static string CmdPrefix = "//";
         public readonly List<IRadegastCommand> CommandsLoaded = new List<IRadegastCommand>();
@@ -112,7 +112,7 @@ namespace Radegast.Commands
                 CommandQueue.Clear();
                 try
                 {
-                    if (CommandQueued != null) CommandQueued.Close();
+                    CommandQueued?.Close();
                 }
                 catch (Exception)
                 {
@@ -263,7 +263,7 @@ namespace Radegast.Commands
         /// <param name="cmdline"></param>
         public void ExecuteCommand(string cmdline)
         {
-            ExecuteCommand(this.WriteLine, cmdline);
+            ExecuteCommand(WriteLine, cmdline);
         }
 
         /// <summary>

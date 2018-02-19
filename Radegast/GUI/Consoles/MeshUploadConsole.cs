@@ -30,12 +30,7 @@
 //
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Data;
-using System.Linq;
-using System.Text;
+using System.Globalization;
 using System.Windows.Forms;
 using System.IO;
 using System.Threading;
@@ -54,7 +49,7 @@ namespace Radegast
         {
             InitializeComponent();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         public MeshUploadConsole(RadegastInstance instance)
@@ -67,7 +62,7 @@ namespace Radegast
             instance.Netcom.ClientDisconnected += new EventHandler<DisconnectedEventArgs>(Netcom_ClientDisconnected);
             UpdateButtons();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void MeshUploadConsole_Disposed(object sender, EventArgs e)
@@ -184,7 +179,7 @@ namespace Radegast
             o.Multiselect = true;
             var res = o.ShowDialog();
 
-            if (res != System.Windows.Forms.DialogResult.OK)
+            if (res != DialogResult.OK)
                 return;
 
             lock (FileNames)
@@ -232,7 +227,7 @@ namespace Radegast
                 {
                     filename = FileNames.Dequeue();
                 }
-                Msg(string.Format("Processing: {0}", filename));
+                Msg($"Processing: {filename}");
 
                 var parser = new OpenMetaverse.ImportExport.ColladaLoader();
                 var prims = parser.Load(filename, UploadImages);
@@ -242,10 +237,10 @@ namespace Radegast
                     continue;
                 }
 
-                Msg(string.Format("Parse collada file success, found {0} objects", prims.Count));
+                Msg($"Parse collada file success, found {prims.Count} objects");
                 Msg("Uploading...");
 
-                var uploader = new OpenMetaverse.ImportExport.ModelUploader(client, prims, Path.GetFileNameWithoutExtension(filename), "Radegast " + DateTime.Now.ToString());
+                var uploader = new OpenMetaverse.ImportExport.ModelUploader(client, prims, Path.GetFileNameWithoutExtension(filename), "Radegast " + DateTime.Now.ToString(CultureInfo.InvariantCulture));
                 var uploadDone = new AutoResetEvent(false);
 
                 uploader.IncludePhysicsStub = true;

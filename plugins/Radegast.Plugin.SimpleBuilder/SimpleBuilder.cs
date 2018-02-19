@@ -35,10 +35,6 @@
 #region Usings
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Radegast;
@@ -51,7 +47,7 @@ namespace SimpleBuilderNamespace
     /// Example implementation of a control that can be used
     /// as Radegast tab and loeaded as a plugin
     /// </summary>
-    [Radegast.Plugin(Name = "SimpleBuilder Plugin", Description = "Allows you to build some basic prims, like boxes, cylinder, tubes, ... (requires permission!)", Version = "1.0")]
+    [Plugin(Name = "SimpleBuilder Plugin", Description = "Allows you to build some basic prims, like boxes, cylinder, tubes, ... (requires permission!)", Version = "1.0")]
     public partial class SimpleBuilder : RadegastTabControl, IRadegastPlugin
     {
         System.Threading.AutoResetEvent primDone = new System.Threading.AutoResetEvent(false);
@@ -72,10 +68,7 @@ namespace SimpleBuilderNamespace
 
         private Primitive m_selectedPrim;
         public Primitive selectedPrim {
-            get
-            {
-                return m_selectedPrim;
-            }
+            get => m_selectedPrim;
             set
             {
                 if(value == null){
@@ -139,7 +132,7 @@ namespace SimpleBuilderNamespace
         /// <param name="inst">Main RadegastInstance</param>
         public void StartPlugin(RadegastInstance inst)
         {
-            this.instance = inst;
+            instance = inst;
 
             propRequester = new PropertiesQueue(instance);
             propRequester.OnTick += new PropertiesQueue.TickCallback(propRequester_OnTick);
@@ -194,8 +187,7 @@ namespace SimpleBuilderNamespace
                 if(lstPrims != null)
                     lstPrims.VirtualListSize = Prims.Count;
             }
-            if(lstPrims != null)
-                lstPrims.Invalidate();
+            lstPrims?.Invalidate();
         }
 
         private bool IncludePrim(Primitive prim)
@@ -245,7 +237,7 @@ namespace SimpleBuilderNamespace
 
             if (prim.ParentID == client.Self.LocalID)
             {
-                return string.Format("{0} attached to {1}", name, prim.PrimData.AttachmentPoint.ToString());
+                return string.Format("{0} attached to {1}", name, prim.PrimData.AttachmentPoint);
             }
             else if (ownerName != "Loading...")
             {
@@ -349,7 +341,6 @@ namespace SimpleBuilderNamespace
             if (InvokeRequired)
             {
                 BeginInvoke(new MethodInvoker(() => Self_ChatFromSimulator(sender, e)));
-                return;
             }
 
             //txtChat.Text = e.Message;
@@ -363,7 +354,7 @@ namespace SimpleBuilderNamespace
 
             PrimType primType = (PrimType)Enum.Parse(typeof(PrimType), btn.Text);
 
-            this.BuildAndRez(primType);
+            BuildAndRez(primType);
         }
 
         private void BuildAndRez(PrimType primType)
@@ -501,7 +492,7 @@ namespace SimpleBuilderNamespace
                     {
                         distance = 0;
                     }
-                    if (IncludePrim(prim) && (prim.Position != Vector3.Zero) && (distance < (int)this.numRadius.Value))
+                    if (IncludePrim(prim) && (prim.Position != Vector3.Zero) && (distance < (int)numRadius.Value))
                     {
                         Prims.Add(prim);
                         if (prim.Properties == null)
@@ -534,7 +525,7 @@ namespace SimpleBuilderNamespace
                 else
                     instance.MainForm.TabConsole.DisplayNotificationInChat(pluginName + ": Failed to save object", ChatBufferTextStyle.Error);
 
-                instance.MainForm.TabConsole.DisplayNotificationInChat(pluginName + ":" + ex.ToString(), ChatBufferTextStyle.Error);
+                instance.MainForm.TabConsole.DisplayNotificationInChat(pluginName + ":" + ex, ChatBufferTextStyle.Error);
             }
             
         }

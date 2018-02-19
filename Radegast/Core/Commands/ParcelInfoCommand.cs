@@ -28,8 +28,8 @@
 //
 // $Id: CommandsManager.cs 226 2009-09-12 18:10:30Z logicmoo $
 //
+
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Text;
 using OpenMetaverse;
@@ -79,12 +79,12 @@ namespace Radegast.Commands
 
             if (ParcelsDownloaded.WaitOne(30000, false) && Client.Network.Connected)
             {
-                sb.AppendFormat("Downloaded {0} Parcels in {1} " + System.Environment.NewLine,
+                sb.AppendFormat("Downloaded {0} Parcels in {1} " + Environment.NewLine,
                     Client.Network.CurrentSim.Parcels.Count, Client.Network.CurrentSim.Name);
 
                 Client.Network.CurrentSim.Parcels.ForEach(delegate(Parcel parcel)
                 {
-                    sb.AppendFormat("Parcel[{0}]: Name: \"{1}\", Description: \"{2}\" ACLBlacklist Count: {3}, ACLWhiteList Count: {5} Traffic: {4}" + System.Environment.NewLine,
+                    sb.AppendFormat("Parcel[{0}]: Name: \"{1}\", Description: \"{2}\" ACLBlacklist Count: {3}, ACLWhiteList Count: {5} Traffic: {4}" + Environment.NewLine,
                         parcel.LocalID, parcel.Name, parcel.Desc, parcel.AccessBlackList.Count, parcel.Dwell, parcel.AccessWhiteList.Count);
                 });
 

@@ -28,7 +28,7 @@
 //
 // $Id$
 //
-using System;
+
 using OpenMetaverse;
 
 namespace Radegast.Commands
@@ -36,28 +36,24 @@ namespace Radegast.Commands
     public class RadegastCommand : IRadegastCommand
     {
         private readonly CommandExecuteDelegate _execute;
-        private Radegast.RadegastInstance _instance;
 
         /// <summary>
         /// Radegast instance received during start command
         /// </summary>
-        protected RadegastInstance Instance { get { return _instance; } }
+        protected RadegastInstance Instance { get; private set; }
 
         /// <summary>
         /// GridClinet associated with RadegastInstanc received during command startup
         /// </summary>
-        protected GridClient Client { get { return _instance.Client; } }
+        protected GridClient Client => Instance.Client;
+
         /// <summary>
-        /// for subclasses (they should override Execute)
-        /// </summary>
-        /// <param name="name"></param>
-       /// <summary>
         /// For simple creation of new commands
         /// </summary>
         /// <param name="inst"></param>
         public RadegastCommand(RadegastInstance inst)
         {
-            _instance = inst;
+            Instance = inst;
             _execute = null;
         }
 
@@ -68,28 +64,28 @@ namespace Radegast.Commands
         /// <param name="exec"></param>
         public RadegastCommand(RadegastInstance inst, CommandExecuteDelegate exec)
         {
-            _instance = inst;
+            Instance = inst;
             _execute = exec;
         }
 
-        virtual public string Name { get; set; }
+        public virtual string Name { get; set; }
 
-        virtual public string Description { get; set; }
+        public virtual string Description { get; set; }
 
-        virtual public string Usage { get; set; }
+        public virtual string Usage { get; set; }
 
-        virtual public void StartCommand(RadegastInstance inst)
+        public virtual void StartCommand(RadegastInstance inst)
         {
-            _instance = inst;
+            Instance = inst;
         }
 
         // maybe we shoould make this class abstract to force people to implement
-        virtual public void Dispose()
+        public virtual void Dispose()
         {
-            _instance = null;
+            Instance = null;
         }
 
-        virtual public void Execute(string name, string[] cmdArgs, ConsoleWriteLine WriteLine)
+        public virtual void Execute(string name, string[] cmdArgs, ConsoleWriteLine WriteLine)
         {
             if (_execute == null) WriteLine("Someone did not implement {0}!", name);
             else _execute(name, cmdArgs, WriteLine);

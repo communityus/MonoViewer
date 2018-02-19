@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using RadegastSpeech;
+﻿using System.Collections.Generic;
 using RadegastSpeech.Talk;
 
 namespace RadegastSpeech
@@ -64,7 +60,7 @@ namespace RadegastSpeech
         }
 
         public void Speak(
-            RadegastSpeech.Talk.QueuedSpeech utterance,
+            QueuedSpeech utterance,
             string filename)
         {
             synth.Speak(utterance, filename);

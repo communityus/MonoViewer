@@ -35,10 +35,10 @@ namespace Radegast
 {
     class TransparentButton : Button
     {
-        public TransparentButton() : base()
+        public TransparentButton()
         {
-            this.SetStyle(ControlStyles.SupportsTransparentBackColor, true);
-            this.BackColor = Color.Transparent;
+            SetStyle(ControlStyles.SupportsTransparentBackColor, true);
+            BackColor = Color.Transparent;
         }
 
         protected override CreateParams CreateParams

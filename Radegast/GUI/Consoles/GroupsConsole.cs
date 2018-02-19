@@ -29,7 +29,6 @@
 // $Id$
 //
 using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing;
 using OpenMetaverse;
@@ -46,7 +45,7 @@ namespace Radegast
         {
             InitializeComponent();
             Disposed += new EventHandler(GroupsDialog_Disposed);
-            this.client = instance.Client;
+            client = instance.Client;
             this.instance = instance;
             client.Groups.CurrentGroups += new EventHandler<CurrentGroupsEventArgs>(Groups_CurrentGroups);
             client.Groups.GroupCreatedReply += new EventHandler<GroupCreatedReplyEventArgs>(Groups_GroupCreatedReply);
@@ -55,7 +54,7 @@ namespace Radegast
             client.Groups.RequestCurrentGroups();
             UpdateDisplay();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void GroupsDialog_Disposed(object sender, EventArgs e)

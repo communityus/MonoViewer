@@ -29,7 +29,6 @@
 // $Id: Sound.cs 502 2010-03-14 23:13:46Z latifer $
 //
 using System;
-using System.Runtime.InteropServices;
 using FMOD;
 using OpenMetaverse;
 
@@ -91,17 +90,17 @@ namespace Radegast.Media
             filename = speakfile;
 
             // Set flags to determine how it will be played.
-            FMOD.MODE mode = FMOD.MODE.DEFAULT;
+            MODE mode = MODE.DEFAULT;
 
             if (Surround)
             {
-                mode |= FMOD.MODE._3D;
+                mode |= MODE._3D;
 
                 // Set coordinate space interpretation.
                 if (global)
-                    mode |= FMOD.MODE._3D_WORLDRELATIVE;
+                    mode |= MODE._3D_WORLDRELATIVE;
                 else
-                    mode |= FMOD.MODE._3D_HEADRELATIVE;
+                    mode |= MODE._3D_HEADRELATIVE;
             }
 
 

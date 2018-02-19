@@ -29,17 +29,11 @@
 // $Id$
 //
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using OpenMetaverse;
-using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
 
 namespace Radegast
@@ -56,7 +50,7 @@ namespace Radegast
         {
             InitializeComponent();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         public ImageUploadConsole(RadegastInstance instance)
@@ -71,7 +65,7 @@ namespace Radegast
             UpdateButtons();
             OriginalCapsTimeout = client.Settings.CAPS_TIMEOUT;
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void ImageUploadConsole_Disposed(object sender, EventArgs e)
@@ -150,34 +144,32 @@ namespace Radegast
 
             txtStatus.AppendText("Loading...\n");
 
-            string extension = System.IO.Path.GetExtension(FileName).ToLower();
-            Bitmap bitmap = null;
+            string extension = Path.GetExtension(FileName).ToLower();
 
             try
             {
-                if (extension == ".jp2" || extension == ".j2c")
+                Bitmap bitmap = null;
+                switch (extension)
                 {
-                    Image image;
-                    ManagedImage managedImage;
+                    case ".jp2":
+                    case ".j2c":
+                        Image image;
+                        ManagedImage managedImage;
 
-                    // Upload JPEG2000 images untouched
-                    UploadData = System.IO.File.ReadAllBytes(FileName);
+                        // Upload JPEG2000 images untouched
+                        UploadData = File.ReadAllBytes(FileName);
 
-                    OpenJPEG.DecodeToImage(UploadData, out managedImage, out image);
-                    bitmap = (Bitmap)image;
+                        OpenJPEG.DecodeToImage(UploadData, out managedImage, out image);
+                        bitmap = (Bitmap)image;
 
-                    txtStatus.AppendText("Loaded raw JPEG2000 data " + FileName + "\n");
-                }
-                else
-                {
-                    if (extension == ".tga")
-                    {
+                        txtStatus.AppendText("Loaded raw JPEG2000 data " + FileName + "\n");
+                        break;
+                    case ".tga":
                         bitmap = LoadTGAClass.LoadTGA(FileName);
-                    }
-                    else
-                    {
-                        bitmap = (Bitmap)System.Drawing.Image.FromFile(FileName);
-                    }
+                        break;
+                    default:
+                        bitmap = (Bitmap)Image.FromFile(FileName);
+                        break;
                 }
 
                 txtStatus.AppendText("Loaded image " + FileName + "\n");
@@ -228,7 +220,6 @@ namespace Radegast
                 btnSave.Enabled = false;
                 btnUpload.Enabled = false;
                 txtStatus.AppendText(string.Format("Failed to load the image:\n{0}\n", ex.Message));
-                return;
             }
         }
 
@@ -334,7 +325,7 @@ namespace Radegast
             }
 
             txtStatus.AppendText("Upload success.\n");
-            txtStatus.AppendText("New image ID: " + AssetID.ToString() + "\n");
+            txtStatus.AppendText("New image ID: " + AssetID + "\n");
         }
 
         private void UploadHandler(bool success, string status, UUID itemID, UUID assetID)
@@ -363,7 +354,7 @@ namespace Radegast
             }
 
             txtStatus.AppendText("Upload success.\n");
-            txtStatus.AppendText("New image ID: " + AssetID.ToString() + "\n");
+            txtStatus.AppendText("New image ID: " + AssetID + "\n");
         }
 
         private void btnUpload_Click(object sender, EventArgs e)

@@ -28,8 +28,7 @@
 //
 // $Id$
 //
-using System;
-using System.Collections.Generic;
+
 using System.Windows.Forms;
 using OpenMetaverse;
 
@@ -40,12 +39,11 @@ namespace Radegast
         public RadegastTab RadegastTab { get; set; }
 
         protected RadegastInstance instance;
-        protected GridClient client { get { return instance.Client; } }
+        protected GridClient client => instance.Client;
 
         public RadegastTabControl() { }
 
         public RadegastTabControl(RadegastInstance instance)
-            : base()
         {
             this.instance = instance;
         }

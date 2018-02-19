@@ -38,7 +38,6 @@ using System.Threading;
 using System.Windows.Forms;
 using Meebey.SmartIrc4net;
 using OpenMetaverse;
-using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 
 namespace Radegast.Plugin.IRC
@@ -93,7 +92,7 @@ namespace Radegast.Plugin.IRC
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((RelaySource)obj);
             }
 
@@ -115,7 +114,7 @@ namespace Radegast.Plugin.IRC
 
         public IrcClient irc;
 
-        TabsConsole TC { get { return instance.TabConsole; } }
+        TabsConsole TC => instance.TabConsole;
         RichTextBoxPrinter textPrinter;
         private List<string> chatHistory = new List<string>();
         private int chatPointer;

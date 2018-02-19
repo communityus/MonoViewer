@@ -56,7 +56,7 @@ namespace Radegast
             this.anim = anim;
             this.n = n;
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void AnimDetail_Disposed(object sender, EventArgs e)
@@ -90,12 +90,17 @@ namespace Radegast
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            WindowWrapper mainWindow = new WindowWrapper(frmMain.ActiveForm.Handle);
-            System.Windows.Forms.SaveFileDialog dlg = new SaveFileDialog();
-            dlg.AddExtension = true;
-            dlg.RestoreDirectory = true;
-            dlg.Title = "Save animation as...";
-            dlg.Filter = "Second Life Animation (*.sla)|*.sla";
+            if (Form.ActiveForm != null)
+            {
+                WindowWrapper mainWindow = new WindowWrapper(Form.ActiveForm.Handle);
+            }
+            SaveFileDialog dlg = new SaveFileDialog
+            {
+                AddExtension = true,
+                RestoreDirectory = true,
+                Title = "Save animation as...",
+                Filter = "Second Life Animation (*.sla)|*.sla"
+            };
             DialogResult res = dlg.ShowDialog();
 
             if (res == DialogResult.OK)
@@ -174,7 +179,7 @@ namespace Radegast
             }
             else
             {
-                Logger.Log("Created inventory item " + itemID.ToString(), Helpers.LogLevel.Info);
+                Logger.Log("Created inventory item " + itemID, Helpers.LogLevel.Info);
 
                 lblStatus.Text = "Sending to " + friend.Name;
                 Logger.Log("Sending item to " + friend.Name, Helpers.LogLevel.Info);

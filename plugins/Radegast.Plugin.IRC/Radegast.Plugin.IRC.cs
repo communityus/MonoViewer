@@ -30,20 +30,16 @@
 //
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
 using System.Windows.Forms;
-using Radegast;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 
 namespace Radegast.Plugin.IRC
 {
-    [Radegast.Plugin(Name = "IRC Relay", Description = "Relays SL group chat to a IRC network", Version = "0.1")]
+    [Plugin(Name = "IRC Relay", Description = "Relays SL group chat to a IRC network", Version = "0.1")]
     public class IRCPlugin : IRadegastPlugin
     {
         RadegastInstance instance;
-        GridClient Client { get { return instance.Client; } }
+        GridClient Client => instance.Client;
 
         ToolStripMenuItem IRCButton;
         int relayNr = 0;
@@ -79,9 +75,9 @@ namespace Radegast.Plugin.IRC
         void IRCButton_Click(object sender, EventArgs e)
         {
             relayNr++;
-            string tabName = "irc_relay_" + relayNr.ToString();
+            string tabName = "irc_relay_" + relayNr;
 
-            instance.TabConsole.AddTab(tabName, "IRC Relay " + relayNr.ToString(), new RelayConsole(instance));
+            instance.TabConsole.AddTab(tabName, "IRC Relay " + relayNr, new RelayConsole(instance));
             instance.TabConsole.SelectTab(tabName);
         }
     }

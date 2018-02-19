@@ -30,21 +30,10 @@
 //
 
 #region Usings
-using System;
-using System.Collections.Generic;
+
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Windows.Forms;
-using System.Text;
-using System.Threading;
-using System.Linq;
 using OpenTK.Graphics.OpenGL;
-using OpenMetaverse;
-using OpenMetaverse.Rendering;
-using OpenMetaverse.Assets;
-using OpenMetaverse.Imaging;
-using OpenMetaverse.StructuredData;
+
 #endregion Usings
 
 namespace Radegast.Rendering
@@ -71,12 +60,12 @@ namespace Radegast.Rendering
 
         void InitWater()
         {
-            Bitmap normal = (Bitmap)Bitmap.FromFile(System.IO.Path.Combine("shader_data", "normalmap.png"));
+            Bitmap normal = (Bitmap)Image.FromFile(System.IO.Path.Combine("shader_data", "normalmap.png"));
             reflectionTexture = RHelp.GLLoadImage(normal, false);
             refractionTexture = RHelp.GLLoadImage(normal, false);
             normalmap = RHelp.GLLoadImage(normal, false);
             depthTexture = RHelp.GLLoadImage(normal, false);
-            dudvmap = RHelp.GLLoadImage((Bitmap)Bitmap.FromFile(System.IO.Path.Combine("shader_data", "dudvmap.png")), false);
+            dudvmap = RHelp.GLLoadImage((Bitmap)Image.FromFile(System.IO.Path.Combine("shader_data", "dudvmap.png")), false);
             waterProgram.Load("water.vert", "water.frag");
         }
 

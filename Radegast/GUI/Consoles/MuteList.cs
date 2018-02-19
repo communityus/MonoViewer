@@ -30,11 +30,6 @@
 //
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using OpenMetaverse;
 
@@ -46,7 +41,7 @@ namespace Radegast
         {
             InitializeComponent();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         public MuteList(RadegastInstance instance)
@@ -58,7 +53,7 @@ namespace Radegast
             instance.ClientChanged += new EventHandler<ClientChangedEventArgs>(instance_ClientChanged);
             RefreshMuteList();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void instance_ClientChanged(object sender, ClientChangedEventArgs e)
@@ -105,7 +100,7 @@ namespace Radegast
                 lvMuteList.BeginUpdate();
                 lvMuteList.Items.Clear();
 
-                client.Self.MuteList.ForEach((MuteEntry me) =>
+                client.Self.MuteList.ForEach(me =>
                     {
                         string type = "";
                         switch (me.Type)

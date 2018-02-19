@@ -2,15 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Speech;
 using System.IO;
 using System.Speech.Synthesis;
 using System.Speech.AudioFormat;
 using RadegastSpeech.Talk;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Radegast;
 
 namespace RadegastSpeech
 {
@@ -22,23 +19,19 @@ namespace RadegastSpeech
         private PromptBuilder pb;
         private PromptStyle mainStyle;
         private FileStream mstream;
-        private PromptVolume promptVol = PromptVolume.Loud;
         private string[] BeepNames;
         private OSDMap voiceProperties;
         PromptRate voiceRate
         {
             get
             {
-                if (voiceProperties != null)
+                string voiceSpeed = voiceProperties?["voice_speed"];
+                if (!string.IsNullOrEmpty(voiceSpeed))
                 {
-                    string voiceSpeed = voiceProperties["voice_speed"];
-                    if (!string.IsNullOrEmpty(voiceSpeed))
+                    switch (voiceSpeed)
                     {
-                        switch (voiceSpeed)
-                        {
-                            case "fast": return PromptRate.Fast;
-                            case "slow": return PromptRate.Slow;
-                        }
+                        case "fast": return PromptRate.Fast;
+                        case "slow": return PromptRate.Slow;
                     }
                 }
                 return PromptRate.Medium;
@@ -114,16 +107,10 @@ namespace RadegastSpeech
             System.Collections.ObjectModel.ReadOnlyCollection<SpeechAudioFormatInfo> formats =
                 wv.winVoice.VoiceInfo.SupportedAudioFormats;
 
-            format = formats.FirstOrDefault();
-
-            if (format == null)
-            {
-                // The voice did not tell us its parameters, so we pick some.
-                format = new SpeechAudioFormatInfo(
-                    16000,      // Samples per second
-                    AudioBitsPerSample.Sixteen,
-                    AudioChannel.Mono);
-            }
+            format = formats.FirstOrDefault() ?? new SpeechAudioFormatInfo(
+                         16000,      // Samples per second
+                         AudioBitsPerSample.Sixteen,
+                         AudioChannel.Mono);
 
             // First set up to synthesize the message into a WAV file.
             mstream = new FileStream(outputfile, FileMode.Create, FileAccess.Write);
@@ -235,22 +222,19 @@ namespace RadegastSpeech
                     bool skip = false;
 
                     // Check for additional information about this voice
-                    if (voiceProperties != null)
+                    string propString = voiceProperties?[v.VoiceInfo.Name].AsString();
+                    if (propString != null)
                     {
-                        string propString = voiceProperties[v.VoiceInfo.Name].AsString();
-                        if (propString != null)
-                        {
-                            // Properties are a series of blank-separated keywords
-                            string[] props = propString.Split(' ');
+                        // Properties are a series of blank-separated keywords
+                        string[] props = propString.Split(' ');
 
-                            foreach (string key in props)
+                        foreach (string key in props)
+                        {
+                            switch (key)
                             {
-                                switch (key)
-                                {
-                                    case "ignore":
-                                        skip = true;
-                                        break;
-                                }
+                                case "ignore":
+                                    skip = true;
+                                    break;
                             }
                         }
                     }

@@ -30,9 +30,6 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -51,8 +48,8 @@ namespace Radegast
         public Floater(RadegastInstance instance, Control control, Control trackedControl)
             : base(instance)
         {
-            this.Control = control;
-            this.TrackedControl = trackedControl;
+            Control = control;
+            TrackedControl = trackedControl;
             SettingsKeyBase = "tab_window_" + control.GetType().Name;
             AutoSavePosition = true;
 

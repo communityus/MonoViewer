@@ -28,9 +28,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using System.Threading;
 
 using OpenMetaverse;
@@ -41,17 +38,15 @@ namespace Radegast.Automation
     public class LSLHelper : IDisposable
     {
         public bool Enabled;
-        public UUID AllowedOwner;
+        public HashSet<String> AllowedOwners;
 
         RadegastInstance instance;
-        GridClient client
-        {
-            get { return instance.Client; }
-        }
+        GridClient client => instance.Client;
 
         public LSLHelper(RadegastInstance instance)
         {
             this.instance = instance;
+            this.AllowedOwners = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
 
         public void Dispose()
@@ -67,7 +62,12 @@ namespace Radegast.Automation
                     return;
                 OSDMap map = (OSDMap)instance.ClientSettings["LSLHelper"];
                 Enabled = map["enabled"];
-                AllowedOwner = map["allowed_owner"];
+                AllowedOwners.Clear();
+                var allowedOwnerList = map["allowed_owner"].AsString();
+                if (!string.IsNullOrWhiteSpace(allowedOwnerList))
+                {
+                    AllowedOwners.UnionWith(allowedOwnerList.Split(';'));
+                }
             }
             catch { }
         }
@@ -79,7 +79,7 @@ namespace Radegast.Automation
             {
                 OSDMap map = new OSDMap(2);
                 map["enabled"] = Enabled;
-                map["allowed_owner"] = AllowedOwner;
+                map["allowed_owner"] = string.Join(";", AllowedOwners);
                 instance.ClientSettings["LSLHelper"] = map;
             }
             catch { }
@@ -103,7 +103,7 @@ namespace Radegast.Automation
             {
                 case InstantMessageDialog.MessageFromObject:
                     {
-                        if (e.IM.FromAgentID != AllowedOwner)
+                        if (!AllowedOwners.Contains(e.IM.FromAgentID.ToString()))
                         {
                             return true;
                         }
@@ -152,6 +152,34 @@ namespace Radegast.Automation
                                     );
                                     return true;
                                 }
+                            case "say": /* This one doesn't work yet. I don't know why. TODO. - Nico */
+                                {
+                                    if (args.Length < 2) return true;
+                                    ChatType ct = ChatType.Normal;
+                                    int chan = 0;
+                                    if (args.Length > 2 && int.TryParse(args[2].Trim(), out chan) && chan < 0)
+                                    {
+                                        chan = 0;
+                                    }
+                                    if (args.Length > 3)
+                                    {
+                                        switch (args[3].Trim().ToLower())
+                                        {
+                                            case "whisper":
+                                                {
+                                                    ct = ChatType.Whisper;
+                                                    break;
+                                                }
+                                            case "shout":
+                                                {
+                                                    ct = ChatType.Shout;
+                                                }
+                                                break;
+                                        }
+                                    }
+                                    client.Self.Chat(args[1].Trim(), chan, ct);
+                                    return true;
+                                }
                         }
                     }
                     break;
@@ -190,7 +218,7 @@ namespace Radegast.Automation
 
                         client.Groups.GroupMembersReply += handler;
                         client.Groups.RequestGroupMembers(groupID);
-                        bool success = gotMembers.WaitOne(30 * 1000, false);
+                        gotMembers.WaitOne(30 * 1000, false);
                         client.Groups.GroupMembersReply -= handler;
 
                         if (Members != null && Members.ContainsKey(invitee))

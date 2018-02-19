@@ -41,8 +41,6 @@ using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
 using Monitor = ThreadPoolUtil.Monitor;
 #endif
-using System.Threading;
-
 using OpenMetaverse;
 using OpenMetaverse.Rendering;
 using Path = System.IO.Path;
@@ -90,7 +88,7 @@ namespace Radegast.Rendering
         public int teFaceID;
         public Dictionary<int, VisualParamEx> _evp = new Dictionary<int, VisualParamEx>();
 
-        public new class LODMesh : LindenMesh.ReferenceMesh
+        public new class LODMesh : ReferenceMesh
         {
             public ushort[] Indices;
 
@@ -110,9 +108,6 @@ namespace Radegast.Rendering
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         public struct GLData
         {
             public float[] Vertices;
@@ -849,12 +844,12 @@ namespace Radegast.Rendering
                         VisualAppearanceParameters[x] = vpvalue;
 
                         float value = (vpvalue / 255.0f);
-                        this.applyMorph(av, vpe.ParamID, value);
+                        applyMorph(av, vpe.ParamID, value);
 
                         x++;
                     }
 
-                    this.skel.mNeedsMeshRebuild = true;
+                    skel.mNeedsMeshRebuild = true;
                     // Don't update actual meshes here anymore, we do it every frame because of animation anyway
 
                 }
@@ -1170,7 +1165,7 @@ namespace Radegast.Rendering
                 state.easeoutfactor = 1.0f;
                 state.easeoutrot = Quaternion.Identity;
 
-                if (b.Loop == true)
+                if (b.Loop)
                 {
                     int frame = 0;
                     foreach (binBVHJointKey key in joint.rotationkeys)
@@ -1519,7 +1514,7 @@ namespace Radegast.Rendering
 
                         //end of rotation
 
-                        joint jointstate = new Rendering.joint();
+                        joint jointstate = new joint();
 
                         if (jointdeforms.TryGetValue(ar.anim.joints[jpos].Name, out jointstate))
                         {
@@ -1625,7 +1620,7 @@ namespace Radegast.Rendering
 
         public static void loadbones(string skeletonfilename)
         {
-            lock (Bone.mBones) mBones.Clear();
+            lock (mBones) mBones.Clear();
             string basedir = Path.Combine(Directory.GetCurrentDirectory(), "character");
             XmlDocument skeleton = new XmlDocument();
             skeleton.Load(Path.Combine(basedir, skeletonfilename));
@@ -1671,7 +1666,7 @@ namespace Radegast.Rendering
                 parent.children.Add(b);
             }
 
-            lock (Bone.mBones) mBones.Add(b.name, b);
+            lock (mBones) mBones.Add(b.name, b);
             mIndexedBones.Add(boneaddindex++, b);
 
             Logger.Log("Found bone " + b.name, Helpers.LogLevel.Info);
@@ -1695,7 +1690,7 @@ namespace Radegast.Rendering
             animation_offset = dpos;
 
             //this.pos = Bone.mBones[name].offset_pos + dpos;
-            lock (Bone.mBones) this.rot = Bone.mBones[name].orig_rot * rot;
+            lock (mBones) this.rot = mBones[name].orig_rot * rot;
 
             markdirty();
         }
@@ -1708,7 +1703,7 @@ namespace Radegast.Rendering
 
         public void offsetbone(Vector3 offset)
         {
-            this.offset_pos += offset;
+            offset_pos += offset;
             markdirty();
         }
 
@@ -1725,7 +1720,7 @@ namespace Radegast.Rendering
 
         public Matrix4 getdeform()
         {
-            if (this.parent != null)
+            if (parent != null)
             {
                 return mDeformMatrix * parent.getdeform();
             }
@@ -1798,7 +1793,7 @@ namespace Radegast.Rendering
         private static Quaternion getRotation(string bonename)
         {
             Bone b;
-            lock (Bone.mBones)
+            lock (mBones)
             {
                 return mBones.TryGetValue(bonename, out b) ? (b.getRotation()) : Quaternion.Identity;
             }
@@ -2028,7 +2023,6 @@ namespace Radegast.Rendering
                     case "female":
                         sex = EparamSex.SEX_FEMALE;
                         break;
-                    case "both:":
                     default:
                         sex = EparamSex.SEX_BOTH;
                         break;
@@ -2037,18 +2031,18 @@ namespace Radegast.Rendering
 
             if (node.ParentNode.Name == "mesh")
             {
-                this.MorphMesh = node.ParentNode.Attributes.GetNamedItem("type").Value;
+                MorphMesh = node.ParentNode.Attributes.GetNamedItem("type").Value;
             }
 
             if (Group == (int)GroupType.VISUAL_PARAM_GROUP_TWEAKABLE)
             {
                 if (!TweakableParams.ContainsKey(ParamID)) //stupid duplicate shared params
                 {
-                    TweakableParams.Add(this.ParamID, this);
+                    TweakableParams.Add(ParamID, this);
                 }
                 else
                 {
-                    Logger.Log($"Warning duplicate tweakable paramater ID {count} {this.Name}", Helpers.LogLevel.Warning);
+                    Logger.Log($"Warning duplicate tweakable paramater ID {count} {Name}", Helpers.LogLevel.Warning);
                 }
                 count++;
             }
@@ -2236,7 +2230,7 @@ namespace Radegast.Rendering
 
         public override Primitive BasePrim
         {
-            get { return avatar; }
+            get => avatar;
             set
             {
                 if (value is Avatar)

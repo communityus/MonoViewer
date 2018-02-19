@@ -31,10 +31,7 @@
 //
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -46,7 +43,7 @@ using System.Web.Script.Serialization;
 
 namespace Radegast
 {
-    public enum AutoResponseType : int
+    public enum AutoResponseType
     {
         WhenBusy = 0,
         WhenFromNonFriend = 1,
@@ -164,18 +161,18 @@ namespace Radegast
                 cbxFontSize.Items.Add((float)i + 0.5f);
             }
 
-            foreach (var font in System.Drawing.FontFamily.Families)
+            foreach (var font in FontFamily.Families)
             {
                 cbxFont.Items.Add(font.Name);
             }
 
             //var colorTypes = typeof(System.Drawing.Color);
             //var props = colorTypes.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.DeclaredOnly);
-            var knownColors = typeof(System.Drawing.KnownColor).GetEnumValues();
+            var knownColors = typeof(KnownColor).GetEnumValues();
 
             foreach (var item in knownColors)
             {
-                var color = System.Drawing.Color.FromKnownColor((System.Drawing.KnownColor)item);
+                var color = Color.FromKnownColor((KnownColor)item);
                 cbxForeground.Items.Add(color);
                 cbxBackground.Items.Add(color);
             }
@@ -225,7 +222,7 @@ namespace Radegast
         {
             if (settingInitialized)
             {
-                frmSettings.InitSettigs(instance.GlobalSettings, instance.MonoRuntime);
+                InitSettigs(instance.GlobalSettings, instance.MonoRuntime);
             }
 
             InitializeComponent();
@@ -233,7 +230,7 @@ namespace Radegast
             InitColorSettings();
 
             s = instance.GlobalSettings;
-            // tbpGraphics.Controls.Add(new Radegast.Rendering.GraphicsPreferences(instance));
+            // tbpGraphics.Controls.Add(new Rendering.GraphicsPreferences(instance));
             cbChatTimestamps.Checked = s["chat_timestamps"].AsBoolean();
 
             cbIMTimeStamps.Checked = s["im_timestamps"].AsBoolean();
@@ -251,45 +248,45 @@ namespace Radegast
             cbAutoReconnect.CheckedChanged += new EventHandler(cbAutoReconnect_CheckedChanged);
 
             cbResolveURIs.Checked = s["resolve_uris"].AsBoolean();
-            cbResolveURIs.CheckedChanged += new EventHandler(cbResolveURIs_CheckedChanged); ;
+            cbResolveURIs.CheckedChanged += new EventHandler(cbResolveURIs_CheckedChanged);
 
             cbHideLoginGraphics.Checked = s["hide_login_graphics"].AsBoolean();
             cbHideLoginGraphics.CheckedChanged += new EventHandler(cbHideLoginGraphics_CheckedChanged);
 
             cbRLV.Checked = s["rlv_enabled"].AsBoolean();
-            cbRLV.CheckedChanged += (object sender, EventArgs e) =>
+            cbRLV.CheckedChanged += (sender, e) =>
             {
                 s["rlv_enabled"] = new OSDBoolean(cbRLV.Checked);
             };
 
             cbRLVDebug.Checked = s["rlv_debugcommands"].AsBoolean();
-            cbRLVDebug.CheckedChanged += (object sender, EventArgs e) =>
+            cbRLVDebug.CheckedChanged += (sender, e) =>
             {
                 s["rlv_debugcommands"] = new OSDBoolean(cbRLVDebug.Checked);
             };
 
             cbMUEmotes.Checked = s["mu_emotes"].AsBoolean();
-            cbMUEmotes.CheckedChanged += (object sender, EventArgs e) =>
+            cbMUEmotes.CheckedChanged += (sender, e) =>
             {
                 s["mu_emotes"] = new OSDBoolean(cbMUEmotes.Checked);
             };
 
             if (!s.ContainsKey("minimize_to_tray")) s["minimize_to_tray"] = OSD.FromBoolean(false);
             cbMinToTrey.Checked = s["minimize_to_tray"].AsBoolean();
-            cbMinToTrey.CheckedChanged += (object sender, EventArgs e) =>
+            cbMinToTrey.CheckedChanged += (sender, e) =>
             {
                 s["minimize_to_tray"] = OSD.FromBoolean(cbMinToTrey.Checked);
             };
 
 
             cbNoTyping.Checked = s["no_typing_anim"].AsBoolean();
-            cbNoTyping.CheckedChanged += (object sender, EventArgs e) =>
+            cbNoTyping.CheckedChanged += (sender, e) =>
             {
                 s["no_typing_anim"] = OSD.FromBoolean(cbNoTyping.Checked);
             };
 
             txtAutoResponse.Text = s["auto_response_text"];
-            txtAutoResponse.TextChanged += (object sender, EventArgs e) =>
+            txtAutoResponse.TextChanged += (sender, e) =>
             {
                 s["auto_response_text"] = txtAutoResponse.Text;
             };
@@ -302,7 +299,7 @@ namespace Radegast
             }
 
             cbSyntaxHighlight.Checked = s["script_syntax_highlight"].AsBoolean();
-            cbSyntaxHighlight.CheckedChanged += (object sender, EventArgs e) =>
+            cbSyntaxHighlight.CheckedChanged += (sender, e) =>
             {
                 s["script_syntax_highlight"] = OSD.FromBoolean(cbSyntaxHighlight.Checked);
             };
@@ -366,7 +363,7 @@ namespace Radegast
             };
 
             cbFriendsHighlight.Checked = s["friends_notification_highlight"].AsBoolean();
-            cbFriendsHighlight.CheckedChanged += (object sender, EventArgs e) =>
+            cbFriendsHighlight.CheckedChanged += (sender, e) =>
             {
                 s["friends_notification_highlight"] = new OSDBoolean(cbFriendsHighlight.Checked);
             };
@@ -423,7 +420,7 @@ namespace Radegast
 
             UpdateEnabled();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void UpdateEnabled()
@@ -728,7 +725,7 @@ namespace Radegast
             }
 
             Instance.State.LSLHelper.LoadSettings();
-            tbLSLAllowedOwner.Text = Instance.State.LSLHelper.AllowedOwner.ToString();
+            tbLSLAllowedOwner.Text = string.Join(Environment.NewLine, Instance.State.LSLHelper.AllowedOwners);
             cbLSLHelperEnabled.CheckedChanged -=new EventHandler(cbLSLHelperEnabled_CheckedChanged);
             cbLSLHelperEnabled.Checked = Instance.State.LSLHelper.Enabled;
             cbLSLHelperEnabled.CheckedChanged += new EventHandler(cbLSLHelperEnabled_CheckedChanged);
@@ -742,10 +739,33 @@ namespace Radegast
             }
 
             Instance.State.LSLHelper.Enabled = cbLSLHelperEnabled.Checked;
-            UUID allowedOwner = UUID.Zero;
-            UUID.TryParse(tbLSLAllowedOwner.Text, out allowedOwner);
-            Instance.State.LSLHelper.AllowedOwner = allowedOwner;
+            Instance.State.LSLHelper.AllowedOwners.Clear();
+
+            var warnings = new StringBuilder();
+            foreach (var line in tbLSLAllowedOwner.Lines)
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
+                var owner = line.Trim().ToLower();
+                if (!UUID.TryParse(owner, out _))
+                {
+                    warnings.AppendLine($"Invalid owner UUID: {line}");
+                }
+                else
+                {
+                    Instance.State.LSLHelper.AllowedOwners.Add(owner);
+                }
+            }
+            if (warnings.Length > 0)
+            {
+                MessageBox.Show(warnings.ToString(), "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
             Instance.State.LSLHelper.SaveSettings();
+            LSLHelperPrefsUpdate();
         }
 
         private void llLSLHelperInstructios_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -755,14 +775,6 @@ namespace Radegast
 
         private void tbLSLAllowedOwner_Leave(object sender, EventArgs e)
         {
-            UUID allowedOwner = UUID.Zero;
-            if (UUID.TryParse(tbLSLAllowedOwner.Text, out allowedOwner))
-            {
-            }
-            else
-            {
-                tbLSLAllowedOwner.Text = UUID.Zero.ToString();
-            }
             LSLHelperPrefsSave();
         }
 
@@ -794,7 +806,6 @@ namespace Radegast
             {
                 var sourceControl = sender as ComboBox;
                 var selectedColor = (Color)sourceControl.Items[e.Index];
-                if(sourceControl.Items[e.Index] is Color)
                 {
                     var brushPreview = new SolidBrush(selectedColor);
 
@@ -977,14 +988,11 @@ namespace Radegast
 
         private void lbxColorItems_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(sender is ListBox)
+            var sourceListbox = sender as ListBox;
+            if(sourceListbox?.SelectedItem is Settings.FontSetting)
             {
-                var sourceListbox = sender as ListBox;
-                if(sourceListbox.SelectedItem is Settings.FontSetting)
-                {
-                    var fontSettings = sourceListbox.SelectedItem as Settings.FontSetting;
-                    UpdateSelection(fontSettings);
-                }
+                var fontSettings = sourceListbox.SelectedItem as Settings.FontSetting;
+                UpdateSelection(fontSettings);
             }
         }
 
@@ -1025,6 +1033,11 @@ namespace Radegast
             {
                 ResetFontSettings();
             }
+        }
+
+        private void FrmSettings_FormClosing(object sender, System.Windows.Forms.FormClosingEventArgs e)
+        {
+            LSLHelperPrefsSave();
         }
     }
 

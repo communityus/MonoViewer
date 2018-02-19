@@ -30,14 +30,12 @@
 //
 using System;
 using System.Collections.Generic;
-using System.Collections;
 using System.ComponentModel;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Radegast.Netcom;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 using Radegast.Core;
 
 namespace Radegast
@@ -45,18 +43,17 @@ namespace Radegast
     public partial class ChatConsole : UserControl
     {
         private RadegastInstance instance;
-        private RadegastNetcom netcom { get { return instance.Netcom; } }
-        private GridClient client { get { return instance.Client; } }
-        private ChatTextManager chatManager;
+        private RadegastNetcom netcom => instance.Netcom;
+        private GridClient client => instance.Client;
         private TabsConsole tabConsole;
         private Avatar currentAvatar;
-        private RadegastMovement movement { get { return instance.Movement; } }
+        private RadegastMovement movement => instance.Movement;
         private Regex chatRegex = new Regex(@"^/(\d+)\s*(.*)", RegexOptions.Compiled);
         private List<string> chatHistory = new List<string>();
         private int chatPointer;
 
         public readonly Dictionary<UUID, ulong> agentSimHandle = new Dictionary<UUID, ulong>();
-        public ChatInputBox ChatInputText { get { return cbxInput; } }
+        public ChatInputBox ChatInputText => cbxInput;
 
         public ChatConsole(RadegastInstance instance)
         {
@@ -86,15 +83,15 @@ namespace Radegast
             netcom.ClientLoggedOut += new EventHandler(netcom_ClientLoggedOut);
             RegisterClientEvents(client);
 
-            chatManager = new ChatTextManager(instance, new RichTextBoxPrinter(rtbChat));
-            chatManager.PrintStartupMessage();
+            ChatManager = new ChatTextManager(instance, new RichTextBoxPrinter(rtbChat));
+            ChatManager.PrintStartupMessage();
 
             this.instance.MainForm.Load += new EventHandler(MainForm_Load);
 
             lvwObjects.ListViewItemSorter = new SorterClass(instance);
             cbChatType.SelectedIndex = 1;
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         private void RegisterClientEvents(GridClient client)
@@ -123,11 +120,11 @@ namespace Radegast
             netcom.ClientLoginStatus -= new EventHandler<LoginProgressEventArgs>(netcom_ClientLoginStatus);
             netcom.ClientLoggedOut -= new EventHandler(netcom_ClientLoggedOut);
             UnregisterClientEvents(client);
-            chatManager.Dispose();
-            chatManager = null;
+            ChatManager.Dispose();
+            ChatManager = null;
         }
 
-        static public Font ChangeFontSize(Font font, float fontSize)
+        public static Font ChangeFontSize(Font font, float fontSize)
         {
             if (font != null)
             {
@@ -213,7 +210,7 @@ namespace Radegast
             }
             catch (Exception ex)
             {
-                Logger.DebugLog("Failed to update radar: " + ex.ToString());
+                Logger.DebugLog("Failed to update radar: " + ex);
             }
         }
 
@@ -330,7 +327,7 @@ namespace Radegast
                             continue;
                         }
 
-                        Avatar foundAvi = e.Simulator.ObjectsAvatars.Find((Avatar av) => { return av.ID == key; });
+                        Avatar foundAvi = e.Simulator.ObjectsAvatars.Find(av => { return av.ID == key; });
 
                         // CoarseLocationUpdate gives us hight of 0 when actual height is
                         // between 1024-4096m on OpenSim grids. 1020 on SL
@@ -386,7 +383,7 @@ namespace Radegast
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log("Grid_OnCoarseLocationUpdate: " + ex, OpenMetaverse.Helpers.LogLevel.Error, client);
+                    Logger.Log("Grid_OnCoarseLocationUpdate: " + ex, Helpers.LogLevel.Error, client);
                 }
                 finally
                 {
@@ -612,10 +609,7 @@ namespace Radegast
             }
         }
 
-        public ChatTextManager ChatManager
-        {
-            get { return chatManager; }
-        }
+        public ChatTextManager ChatManager { get; private set; }
 
         private void tbtnStartIM_Click(object sender, EventArgs e)
         {
@@ -668,10 +662,8 @@ namespace Radegast
             }
             else
             {
-                currentAvatar = client.Network.CurrentSim.ObjectsAvatars.Find(delegate(Avatar a)
-                {
-                    return a.ID == (UUID)lvwObjects.SelectedItems[0].Tag;
-                });
+                currentAvatar = client.Network.CurrentSim.ObjectsAvatars.Find(a =>
+                    a.ID == (UUID) lvwObjects.SelectedItems[0].Tag);
 
                 ctxPay.Enabled = ctxStartIM.Enabled = ctxProfile.Enabled = true;
                 ctxPoint.Enabled = ctxFollow.Enabled = ctxTextures.Enabled = ctxMaster.Enabled = ctxAttach.Enabled = ctxAnim.Enabled = currentAvatar != null;
@@ -730,12 +722,12 @@ namespace Radegast
             Avatar av = currentAvatar;
             if (av == null) return;
 
-            if (!instance.TabConsole.TabExists("AT: " + av.ID.ToString()))
+            if (!instance.TabConsole.TabExists("AT: " + av.ID))
             {
-                instance.TabConsole.AddTab("AT: " + av.ID.ToString(), "AT: " + av.Name, new AttachmentTab(instance, av));
+                instance.TabConsole.AddTab("AT: " + av.ID, "AT: " + av.Name, new AttachmentTab(instance, av));
 
             }
-            instance.TabConsole.SelectTab("AT: " + av.ID.ToString());
+            instance.TabConsole.SelectTab("AT: " + av.ID);
         }
 
         private void tbtnAnim_Click(object sender, EventArgs e)
@@ -847,14 +839,7 @@ namespace Radegast
             }
 
             bool isMuted = null != client.Self.MuteList.Find(me => me.Type == MuteType.Resident && me.ID == (UUID)lvwObjects.SelectedItems[0].Tag);
-            if (isMuted)
-            {
-                muteToolStripMenuItem.Text = "Unmute";
-            }
-            else
-            {
-                muteToolStripMenuItem.Text = "Mute";
-            }
+            muteToolStripMenuItem.Text = isMuted ? "Unmute" : "Mute";
 
             instance.ContextActionManager.AddContributions(
                 avatarContext, typeof(Avatar), lvwObjects.SelectedItems[0]);
@@ -921,12 +906,12 @@ namespace Radegast
 
             if (instance.State.TryFindAvatar(person, out sim, out pos))
             {
-                tabConsole.DisplayNotificationInChat(string.Format("Teleporting to {0}", pname));
+                tabConsole.DisplayNotificationInChat($"Teleporting to {pname}");
                 instance.State.MoveTo(sim, pos, true);
             }
             else
             {
-                tabConsole.DisplayNotificationInChat(string.Format("Could not locate {0}", pname));
+                tabConsole.DisplayNotificationInChat($"Could not locate {pname}");
             }
         }
 
@@ -1020,8 +1005,8 @@ namespace Radegast
         public int Compare(object x, object y)
         {
 
-            System.Windows.Forms.ListViewItem item1 = (System.Windows.Forms.ListViewItem)x;
-            System.Windows.Forms.ListViewItem item2 = (System.Windows.Forms.ListViewItem)y;
+            ListViewItem item1 = (ListViewItem)x;
+            ListViewItem item2 = (ListViewItem)y;
 
             if ((item1.Tag is UUID) && ((UUID)item1.Tag == instance.Client.Self.AgentID))
                 return -1;
@@ -1042,7 +1027,7 @@ namespace Radegast
             else if (distance1 > distance2)
                 return 1;
             else
-                return string.Compare(item1.Text, item2.Text);
+                return String.CompareOrdinal(item1.Text, item2.Text);
 
         }
     }

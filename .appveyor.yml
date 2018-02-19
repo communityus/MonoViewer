@@ -6,6 +6,10 @@ init:
 
 image: Visual Studio 2017
 
+branches:
+  except:
+    - localbuilding
+
 configuration: Release
 
 platform: x86
@@ -20,10 +24,14 @@ build:
 
 after_build:
   - cmd: '"C:\Program Files (x86)\NSIS\makensis.exe" bin\Radegast.nsi'
+  - cmd: '7z a -ttar -so Radegast-%TAG_VERSION%.tar bin\ | 7z a -si Radegast-%TAG_VERSION%.tbz'
 
 artifacts:
   - path: 'Radegast-*-installer.exe'
     name: 'Radegast Installer'
+    type: Auto
+  - path: 'Radegast-*.tbz'
+    name: 'Radegast Linux'
     type: Auto
 
 cache:
@@ -38,4 +46,3 @@ assembly_info:
 
 before_build:
   - nuget restore radegast.sln
-

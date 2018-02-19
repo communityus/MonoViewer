@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using OpenMetaverse;
 using Radegast;
-using System.Text.RegularExpressions;
-using System.Net;
 using System.Windows.Forms;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
@@ -32,11 +29,11 @@ namespace RadegastSpeech.Conversation
         private LinkedList<Mode> interruptions;
 
         // The permanent conversations.
-        private Conversation.Chat chat;
-        private Conversation.Closet inventory;
-        private Conversation.Friends friends;
-        private Conversation.Voice voice;
-        private Conversation.Surroundings surroundings;
+        private Chat chat;
+        private Closet inventory;
+        private Friends friends;
+        private Voice voice;
+        private Surroundings surroundings;
         private Mode currentMode;
         private Mode interrupted;
         internal string LoginName;
@@ -551,8 +548,7 @@ namespace RadegastSpeech.Conversation
             if (Command(message)) return;
 
             // Let the current conversation handle it.
-            if (currentMode != null)
-                currentMode.Hear(message);
+            currentMode?.Hear(message);
         }
 
         internal void SelectConversation(Mode c)
@@ -566,8 +562,7 @@ namespace RadegastSpeech.Conversation
             if (currentMode == c) return;
 
             // Let the old conversation deactivate any event hooks, grammars, etc.
-            if (currentMode != null)
-                currentMode.Stop();
+            currentMode?.Stop();
 
             currentMode = c;
             currentMode.Start();
@@ -657,8 +652,7 @@ namespace RadegastSpeech.Conversation
         internal void ChangeFocus(Mode toThis)
         {
             currentMode = toThis;
-            if (currentMode != null)
-                currentMode.Start();
+            currentMode?.Start();
         }
 
 
@@ -669,7 +663,7 @@ namespace RadegastSpeech.Conversation
         /// <param name="e"></param>
         void OnNotificationDisplayed(object sender, NotificationEventArgs e)
         {
-            AddInterruption(new Conversation.BlueMenu(control, e));
+            AddInterruption(new BlueMenu(control, e));
         }
 
         /// <summary>
@@ -680,9 +674,8 @@ namespace RadegastSpeech.Conversation
         void Netcom_InstantMessageSent(object sender, Radegast.Netcom.InstantMessageSentEventArgs e)
         {
             // Message to an individual
-            Conversation.IMSession sess = (IMSession)control.converse.GetConversation(control.instance.Names.Get(e.TargetID, true));
-            if (sess != null)
-                sess.OnMessage(Client.Self.AgentID, Client.Self.Name, e.Message);
+            IMSession sess = (IMSession)control.converse.GetConversation(control.instance.Names.Get(e.TargetID, true));
+            sess?.OnMessage(Client.Self.AgentID, Client.Self.Name, e.Message);
         }
 
 
@@ -696,7 +689,7 @@ namespace RadegastSpeech.Conversation
             WorkPool.QueueUserWorkItem(sync =>
                 {
                     Thread.Sleep(100); // Give tab a chance to show up
-                    Conversation.IMSession sess = null;
+                    IMSession sess = null;
                     string groupName;
 
                     // All sorts of things come in as a instant messages. For actual messages
@@ -751,8 +744,7 @@ namespace RadegastSpeech.Conversation
                                 sess = (IMSession)control.converse.GetConversation(Utils.BytesToString(e.IM.BinaryBucket));
                             }
 
-                            if (sess != null)
-                                sess.OnMessage(e.IM.FromAgentID, e.IM.FromAgentName, e.IM.Message);
+                            sess?.OnMessage(e.IM.FromAgentID, e.IM.FromAgentName, e.IM.Message);
                             break;
 
                         case InstantMessageDialog.FriendshipOffered:

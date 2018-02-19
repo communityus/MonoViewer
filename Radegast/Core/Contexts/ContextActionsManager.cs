@@ -54,7 +54,7 @@ namespace Radegast
         /// </summary>
         /// <param name="libomvType"></param>
         /// <param name="label"></param>
-        /// <param name="handler">Action<object,EventArgs></param>
+        /// <param name="handler">Action&lt;object,EventArgs&gt;</param>
         public void RegisterContextAction(Type libomvType, String label, EventHandler handler)
         {
             RegisterContextAction(new ContextAction(instance)
@@ -68,7 +68,7 @@ namespace Radegast
 
         /// <summary>
         /// Deregister a Context Action 
-        ///  <code></code>DeregisterContextAction(typeof(Object), "Clueless Object!");</code>
+        ///  <code>DeregisterContextAction(typeof(Object), "Clueless Object!")</code>
         /// </summary>
         /// <param name="libomvType"></param>
         /// <param name="label"></param>
@@ -249,7 +249,7 @@ namespace Radegast
         /// <param name="type">The type it will target</param>
         /// <param name="control">Parent control that has buttons on it</param>
         /// <param name="obj">Will becvome the button's target when </param>
-        static public void GleanContributions_Helper(ICollection<ToolStripMenuItem> items, Type type, Control control, Object obj)
+        public static void GleanContributions_Helper(ICollection<ToolStripMenuItem> items, Type type, Control control, Object obj)
         {
             if (control == null) return;
             if (control is Button)
@@ -280,7 +280,7 @@ namespace Radegast
             if (i1 == i2) return 0;
             if (i1 is ToolStripSeparator)
                 return (i2 is ToolStripSeparator) ? 0 : -1;
-            int i = string.Compare(i1.Text, i2.Text);
+            int i = String.CompareOrdinal(i1.Text, i2.Text);
             return i == 0 ? i1.GetHashCode().CompareTo(i2.GetHashCode()) : i;
         }
 

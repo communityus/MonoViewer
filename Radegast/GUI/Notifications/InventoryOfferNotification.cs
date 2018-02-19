@@ -29,23 +29,16 @@
 // $Id: FriendshipOfferNotification.cs 175 2009-08-29 13:52:32Z latifer@gmail.com $
 //
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using OpenMetaverse;
-using OpenMetaverse.Assets;
-using OpenMetaverse.Packets;
 
 namespace Radegast
 {
     public partial class ntfInventoryOffer : Notification
     {
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
+        private GridClient client => instance.Client;
         private InstantMessage msg;
         private AssetType type = AssetType.Unknown;
         private UUID objectID = UUID.Zero;
@@ -74,7 +67,7 @@ namespace Radegast
 
                 if (msg.Dialog == InstantMessageDialog.InventoryOffered)
                 {
-                    txtInfo.Text = string.Format("{0} has offered you {1} \"{2}\".", msg.FromAgentName, type.ToString(), msg.Message);
+                    txtInfo.Text = string.Format("{0} has offered you {1} \"{2}\".", msg.FromAgentName, type, msg.Message);
                 }
                 else if (msg.Dialog == InstantMessageDialog.TaskInventoryOffered)
                 {
@@ -94,7 +87,7 @@ namespace Radegast
                 Logger.Log("Wrong format of the item offered", Helpers.LogLevel.Warning, client);
             }
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void ntfInventoryOffer_Disposed(object sender, EventArgs e)

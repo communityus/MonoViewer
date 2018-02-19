@@ -29,7 +29,6 @@
 // $Id: 
 //
 using System;
-using System.Windows.Forms;
 using OpenMetaverse;
 using Radegast;
 
@@ -69,7 +68,7 @@ namespace RadegastSpeech.GUI
             }
             else
             {
-                control.talker.SayMore("Can not read this notecard.", RadegastSpeech.Talk.BeepType.Bad);
+                control.talker.SayMore("Can not read this notecard.", Talk.BeepType.Bad);
                 return;
             }
 

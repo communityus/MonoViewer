@@ -29,9 +29,6 @@
 // Implements RAD-354
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Timers;
 
 using OpenMetaverse;
@@ -58,7 +55,7 @@ namespace Radegast.Automation
             if (osd != null && osd.Type == OSDType.Map)
             {
                 OSDMap map = (OSDMap)osd;
-                prefs.Enabled = map.ContainsKey("Enabled") ? map["Enabled"].AsBoolean() : false;
+                prefs.Enabled = map.ContainsKey("Enabled") && map["Enabled"].AsBoolean();
                 prefs.Region = map.ContainsKey("Region") ? map["Region"].AsString().Trim() : "";
                 prefs.Position = map.ContainsKey("Position") ? map["Position"].AsVector3() : new Vector3();
                 prefs.Tolerance = map.ContainsKey("Tolerance") ? Math.Min(256, Math.Max(1, map["Tolerance"].AsUInteger())) : 256;
@@ -113,12 +110,9 @@ namespace Radegast.Automation
 
         public PseudoHomePreferences Preferences
         {
-            get { return !m_instance.Client.Network.Connected ? null : (PseudoHomePreferences)m_instance.ClientSettings; }
+            get => !m_instance.Client.Network.Connected ? null : (PseudoHomePreferences)m_instance.ClientSettings;
 
-            set
-            {
-                m_instance.ClientSettings["PseudoHome"] = value;
-            }
+            set => m_instance.ClientSettings["PseudoHome"] = value;
         }
 
         public void ETGoHome()

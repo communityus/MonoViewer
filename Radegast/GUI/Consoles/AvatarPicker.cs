@@ -32,10 +32,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using OpenMetaverse;
 
@@ -44,7 +40,7 @@ namespace Radegast
     public partial class AvatarPicker : UserControl
     {
         RadegastInstance instance;
-        GridClient client { get { return instance.Client; } }
+        GridClient client => instance.Client;
         UUID searchID;
         public ListView currentList;
 
@@ -85,7 +81,7 @@ namespace Radegast
                 lvwNear.Items.Add(new ListViewItem() { Text = nearAvatars[i].Name, Tag = nearAvatars[i].ID });
             }
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void AvatarPicker_Disposed(object sender, EventArgs e)
@@ -126,15 +122,13 @@ namespace Radegast
         private void lvwNear_SelectedIndexChanged(object sender, EventArgs e)
         {
             currentList = lvwNear;
-            if (SelectionChaged != null)
-                SelectionChaged(this, EventArgs.Empty);
+            SelectionChaged?.Invoke(this, EventArgs.Empty);
         }
 
         private void lvwSearch_SelectedIndexChanged(object sender, EventArgs e)
         {
             currentList = lvwSearch;
-            if (SelectionChaged != null)
-                SelectionChaged(this, EventArgs.Empty);
+            SelectionChaged?.Invoke(this, EventArgs.Empty);
         }
 
         private void lvwSearch_SizeChanged(object sender, EventArgs e)

@@ -28,11 +28,6 @@
 //
 // $Id$
 //
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
 
 using OpenMetaverse;
 
@@ -46,11 +41,6 @@ namespace Radegast.Commands
             Name = "unsit";
             Description = "Unsits if seated";
             Usage = "unsit";
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
         }
 
         public override void Execute(string name, string[] cmdArgs, ConsoleWriteLine WriteLine)

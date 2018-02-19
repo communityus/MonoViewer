@@ -41,7 +41,7 @@ namespace Radegast
     public partial class LoginConsole : UserControl, IRadegastTabControl
     {
         private RadegastInstance instance;
-        private RadegastNetcom netcom { get { return instance.Netcom; } }
+        private RadegastNetcom netcom => instance.Netcom;
 
         public LoginConsole(RadegastInstance instance)
         {
@@ -67,7 +67,7 @@ namespace Radegast
 
             Load += new EventHandler(LoginConsole_Load);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         private void MainConsole_Disposed(object sender, EventArgs e)
@@ -80,7 +80,7 @@ namespace Radegast
         {
             if (!instance.GlobalSettings["theme_compatibility_mode"] && instance.PlainColors)
             {
-                panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(210)))), ((int)(((byte)(225)))));
+                panel1.BackColor = Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(210)))), ((int)(((byte)(225)))));
             }
 
             cbxLocation.SelectedIndex = 0;

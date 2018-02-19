@@ -28,10 +28,8 @@
 //
 // $Id$
 //
-using System;
+
 using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 using OpenMetaverse;
@@ -40,7 +38,7 @@ namespace Radegast.Commands
 {
     public class SitCommand : RadegastCommand
     {
-        TabsConsole TC { get { return Instance.TabConsole; } }
+        TabsConsole TC => Instance.TabConsole;
         ObjectsConsole Objects;
         ChatConsole Chat;
         ConsoleWriteLine wl;
@@ -106,11 +104,8 @@ namespace Radegast.Commands
             Objects = (ObjectsConsole)TC.Tabs["objects"].Control;
             List<Primitive> prims = Objects.GetObjectList();
 
-            Primitive target = prims.Find((Primitive prim) =>
-            {
-                return prim.Properties != null
-                    && prim.Properties.Name.ToLower().Contains(cmd.ToLower());
-            });
+            Primitive target = prims.Find(prim => prim.Properties != null
+                                          && prim.Properties.Name.ToLower().Contains(cmd.ToLower()));
 
             if (target == null)
             {

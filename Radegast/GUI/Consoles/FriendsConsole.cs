@@ -47,7 +47,7 @@ namespace Radegast
     public partial class FriendsConsole : UserControl
     {
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
+        private GridClient client => instance.Client;
         private FriendInfo selectedFriend;
         private bool settingFriend = false;
         private readonly object lockOneAtaTime = new object();
@@ -78,7 +78,7 @@ namespace Radegast
             Load += new EventHandler(FriendsConsole_Load);
             instance.Names.NameUpdated += new EventHandler<UUIDNameReplyEventArgs>(Names_NameUpdated);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void Names_NameUpdated(object sender, UUIDNameReplyEventArgs e)
@@ -130,7 +130,7 @@ namespace Radegast
                     else if (!fi1.IsOnline && fi2.IsOnline)
                         return 1;
                     else
-                        return string.Compare(fi1.Name, fi2.Name);
+                        return String.CompareOrdinal(fi1.Name, fi2.Name);
                 }
             );
 
@@ -319,7 +319,7 @@ namespace Radegast
                             UUID sessionID = UUID.Zero;
                             string sessionName = string.Empty;
 
-                            EventHandler<GroupChatJoinedEventArgs> handler = (object isender, GroupChatJoinedEventArgs ie) =>
+                            EventHandler<GroupChatJoinedEventArgs> handler = (isender, ie) =>
                                 {
                                     if (ie.TmpSessionID == tmpID)
                                     {
@@ -406,7 +406,7 @@ namespace Radegast
         public void ShowContextMenu()
         {
             RadegastContextMenuStrip menu = GetContextMenu();
-            if (menu.HasSelection) menu.Show(listFriends, listFriends.PointToClient(System.Windows.Forms.Control.MousePosition));
+            if (menu.HasSelection) menu.Show(listFriends, listFriends.PointToClient(MousePosition));
         }
 
         public RadegastContextMenuStrip GetContextMenu()

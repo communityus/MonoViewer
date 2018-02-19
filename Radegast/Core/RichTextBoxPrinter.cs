@@ -29,7 +29,6 @@
 // $Id$
 //
 using System;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Drawing;
 using System.Windows.Forms;
@@ -74,7 +73,6 @@ namespace Radegast
 
         private void FindURLs(string text)
         {
-            StringBuilder sb = new StringBuilder();
             string[] lineParts = urlRegex.Split(text);
             int linePartIndex;
 
@@ -151,50 +149,26 @@ namespace Radegast
 
         public string Content
         {
-            get
-            {
-                return rtb.Text;
-            }
-            set
-            {
-                rtb.Text = value;
-            }
+            get => rtb.Text;
+            set => rtb.Text = value;
         }
 
-        public System.Drawing.Color ForeColor
+        public Color ForeColor
         {
-            get
-            {
-                return rtb.SelectionColor;
-            }
-            set
-            {
-                rtb.SelectionColor = value;
-            }
+            get => rtb.SelectionColor;
+            set => rtb.SelectionColor = value;
         }
 
-        public System.Drawing.Color BackColor
+        public Color BackColor
         {
-            get
-            {
-                return rtb.SelectionBackColor;
-            }
-            set
-            {
-                rtb.SelectionBackColor = value;
-            }
+            get => rtb.SelectionBackColor;
+            set => rtb.SelectionBackColor = value;
         }
 
-        public System.Drawing.Font Font
+        public Font Font
         {
-            get
-            {
-                return rtb.SelectionFont;
-            }
-            set
-            {
-                rtb.SelectionFont = value;
-            }
+            get => rtb.SelectionFont;
+            set => rtb.SelectionFont = value;
         }
 
         #endregion

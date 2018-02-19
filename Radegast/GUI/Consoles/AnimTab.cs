@@ -32,7 +32,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using System.IO;
 using OpenMetaverse;
 
 namespace Radegast
@@ -51,12 +50,12 @@ namespace Radegast
             Disposed += new EventHandler(AnimTab_Disposed);
             this.instance = instance;
             this.av = av;
-            this.client = instance.Client;
+            client = instance.Client;
 
             // Callbacks
             client.Avatars.AvatarAnimation += new EventHandler<AvatarAnimationEventArgs>(Avatars_AvatarAnimation);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void AnimTab_Disposed(object sender, EventArgs e)

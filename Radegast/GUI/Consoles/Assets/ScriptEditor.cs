@@ -43,7 +43,7 @@ namespace Radegast
     public partial class ScriptEditor : UserControl
     {
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
+        private GridClient client => instance.Client;
         private InventoryLSL script;
         private string scriptName;
         private string fileName;
@@ -71,10 +71,10 @@ namespace Radegast
 
             rtb.SyntaxHighlightEnabled = instance.GlobalSettings["script_syntax_highlight"].AsBoolean();
             lblScripStatus.Text = string.Empty;
-            lblScripStatus.TextChanged += (object sender, EventArgs e) =>
+            lblScripStatus.TextChanged += (sender, e) =>
                 instance.TabConsole.DisplayNotificationInChat(lblScripStatus.Text, ChatBufferTextStyle.Invisible);
             Dock = DockStyle.Fill;
-            this.TabStop = false;
+            TabStop = false;
 
             if (prim == null)
             {
@@ -103,7 +103,7 @@ namespace Radegast
                 rtb.SelectionStart = 0;
             }
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void SscriptEditor_Disposed(object sender, EventArgs e)
@@ -162,10 +162,7 @@ namespace Radegast
 
         public bool Detached
         {
-            get
-            {
-                return detached;
-            }
+            get => detached;
 
             set
             {
@@ -193,10 +190,7 @@ namespace Radegast
         {
             detached = true;
 
-            if (detachedForm != null)
-            {
-                detachedForm.Dispose();
-            }
+            detachedForm?.Dispose();
 
             detachedForm = new Form();
             originalParent = Parent;
@@ -643,13 +637,13 @@ namespace Radegast
 
         private static string ReplaceEx(string original, string pattern, string replacement)
         {
-            int count, position0, position1;
-            count = position0 = position1 = 0;
+            int position0, position1;
+            var count = position0 = position1 = 0;
             string upperString = original.ToUpper();
             string upperPattern = pattern.ToUpper();
             int inc = (original.Length / pattern.Length) * (replacement.Length - pattern.Length);
             char[] chars = new char[original.Length + Math.Max(0, inc)];
-            while ((position1 = upperString.IndexOf(upperPattern, position0)) != -1)
+            while ((position1 = upperString.IndexOf(upperPattern, position0, StringComparison.Ordinal)) != -1)
             {
                 for (int i = position0; i < position1; ++i)
                     chars[count++] = original[i];
@@ -680,7 +674,7 @@ namespace Radegast
 
         private void syntaxHiglightingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (rtb.SyntaxHighlightEnabled == true)
+            if (rtb.SyntaxHighlightEnabled)
             {
                 rtb.SyntaxHighlightEnabled = false;
             }
@@ -700,7 +694,7 @@ namespace Radegast
 
         private void tbtbSave_Click(object sender, EventArgs e)
         {
-            InventoryManager.ScriptUpdatedCallback handler = (bool uploadSuccess, string uploadStatus, bool compileSuccess, List<string> compileMessages, UUID itemID, UUID assetID) =>
+            InventoryManager.ScriptUpdatedCallback handler = (uploadSuccess, uploadStatus, compileSuccess, compileMessages, itemID, assetID) =>
             {
                 if (!IsHandleCreated && instance.MonoRuntime) return;
 

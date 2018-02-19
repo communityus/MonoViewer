@@ -31,8 +31,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
@@ -50,7 +48,7 @@ namespace Radegast
     /// <summary>
     /// Enum representing different modes of handling display names
     /// </summary>
-    public enum NameMode : int
+    public enum NameMode
     {
         /// <summary> No display names </summary>
         Standard,
@@ -81,16 +79,13 @@ namespace Radegast
                 return (NameMode)instance.GlobalSettings["display_name_mode"].AsInteger();
             }
 
-            set
-            {
-                instance.GlobalSettings["display_name_mode"] = (int)value;
-            }
+            set => instance.GlobalSettings["display_name_mode"] = (int)value;
         }
         #endregion public fields and properties
 
         #region private fields and properties
         RadegastInstance instance;
-        GridClient client { get { return instance.Client; } }
+        GridClient client => instance.Client;
         Timer requestTimer;
         Timer cacheTimer;
         string cacheFileName;
@@ -192,7 +187,7 @@ namespace Radegast
                 List<UUID> req = null;
                 if (!PendingLookups.Dequeue(Timeout.Infinite, ref req)) break;
                 lookupGate.WaitOne(90 * 1000);
-                client.Avatars.GetDisplayNames(req, (bool success, AgentDisplayName[] names, UUID[] badIDs) =>
+                client.Avatars.GetDisplayNames(req, (success, names, badIDs) =>
                 {
                     if (success)
                     {
@@ -377,7 +372,7 @@ namespace Radegast
                     }
                     else
                     {
-                        client.Avatars.GetDisplayNames(req, (bool success, AgentDisplayName[] names, UUID[] badIDs) =>
+                        client.Avatars.GetDisplayNames(req, (success, names, badIDs) =>
                         {
                             if (success)
                             {
@@ -472,18 +467,12 @@ namespace Radegast
 
         void TriggerNameRequest()
         {
-            if (requestTimer != null)
-            {
-                requestTimer.Change(REQUEST_DELAY, Timeout.Infinite);
-            }
+            requestTimer?.Change(REQUEST_DELAY, Timeout.Infinite);
         }
 
         void TriggerCacheSave()
         {
-            if (cacheTimer != null)
-            {
-                cacheTimer.Change(CACHE_DELAY, Timeout.Infinite);
-            }
+            cacheTimer?.Change(CACHE_DELAY, Timeout.Infinite);
         }
 
         void QueueNameRequest(UUID agentID)
@@ -656,7 +645,7 @@ namespace Radegast
             using (ManualResetEvent gotName = new ManualResetEvent(false))
             {
 
-                EventHandler<UUIDNameReplyEventArgs> handler = (object sender, UUIDNameReplyEventArgs e) =>
+                EventHandler<UUIDNameReplyEventArgs> handler = (sender, e) =>
                 {
                     if (e.Names.ContainsKey(agentID))
                     {

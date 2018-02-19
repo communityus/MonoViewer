@@ -33,10 +33,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using System.Text;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
@@ -44,13 +43,11 @@ using ThreadPool = ThreadPoolUtil.ThreadPool;
 using Monitor = ThreadPoolUtil.Monitor;
 #endif
 using System.Threading;
-using System.Linq;
 using OpenTK.Graphics.OpenGL;
 using OpenMetaverse;
 using OpenMetaverse.Rendering;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
-using OpenMetaverse.StructuredData;
 using OpenMetaverse.Packets;
 #endregion Usings
 
@@ -85,7 +82,7 @@ namespace Radegast.Rendering
         /// </summary>
         public float DrawDistance
         {
-            get { return drawDistance; }
+            get => drawDistance;
             set
             {
                 drawDistance = value;
@@ -170,8 +167,8 @@ namespace Radegast.Rendering
         {
             InitializeComponent();
 
-            this.Instance = instance;
-            this.Client = instance.Client;
+            Instance = instance;
+            Client = instance.Client;
 
             UseMultiSampling = Instance.GlobalSettings["use_multi_sampling"];
 
@@ -212,7 +209,7 @@ namespace Radegast.Rendering
             Instance.Netcom.ClientDisconnected += new EventHandler<DisconnectedEventArgs>(Netcom_ClientDisconnected);
             Application.Idle += new EventHandler(Application_Idle);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void DisposeInternal()
@@ -333,16 +330,16 @@ namespace Radegast.Rendering
         #region Tab Events
         public void RegisterTabEvents()
         {
-            this.RadegastTab.TabAttached += new EventHandler(RadegastTab_TabAttached);
-            this.RadegastTab.TabDetached += new EventHandler(RadegastTab_TabDetached);
-            this.RadegastTab.TabClosed += new EventHandler(RadegastTab_TabClosed);
+            RadegastTab.TabAttached += new EventHandler(RadegastTab_TabAttached);
+            RadegastTab.TabDetached += new EventHandler(RadegastTab_TabDetached);
+            RadegastTab.TabClosed += new EventHandler(RadegastTab_TabClosed);
         }
 
         public void UnregisterTabEvents()
         {
-            this.RadegastTab.TabAttached -= new EventHandler(RadegastTab_TabAttached);
-            this.RadegastTab.TabDetached -= new EventHandler(RadegastTab_TabDetached);
-            this.RadegastTab.TabClosed -= new EventHandler(RadegastTab_TabClosed);
+            RadegastTab.TabAttached -= new EventHandler(RadegastTab_TabAttached);
+            RadegastTab.TabDetached -= new EventHandler(RadegastTab_TabDetached);
+            RadegastTab.TabClosed -= new EventHandler(RadegastTab_TabClosed);
         }
 
         void RadegastTab_TabDetached(object sender, EventArgs e)
@@ -357,7 +354,7 @@ namespace Radegast.Rendering
 
         void RadegastTab_TabClosed(object sender, EventArgs e)
         {
-            if (this.RadegastTab != null)
+            if (RadegastTab != null)
             {
                 UnregisterTabEvents();
             }
@@ -380,7 +377,6 @@ namespace Radegast.Rendering
             {
                 if (!IsHandleCreated) return;
                 BeginInvoke(new MethodInvoker(() => Dispose()));
-                return;
             }
         }
 
@@ -555,10 +551,16 @@ namespace Radegast.Rendering
         #region glControl setup and disposal
         public void SetupGLControl()
         {
+            // Crash fix for users with SDL2.dll in their path. OpenTK will attempt to use
+            //   SDL2 if it's available, but SDL2 is unsupported and will crash users.
+            OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions
+            {
+                Backend = OpenTK.PlatformBackend.PreferNative
+            });
+
             RenderingEnabled = false;
 
-            if (glControl != null)
-                glControl.Dispose();
+            glControl?.Dispose();
             glControl = null;
 
             GLMode = null;
@@ -611,7 +613,7 @@ namespace Radegast.Rendering
                 return;
             }
 
-            Logger.Log("Initializing OpenGL mode: " + GLMode.ToString(), Helpers.LogLevel.Info);
+            Logger.Log("Initializing OpenGL mode: " + GLMode, Helpers.LogLevel.Info);
 
             glControl.Paint += glControl_Paint;
             glControl.Resize += glControl_Resize;
@@ -791,7 +793,7 @@ namespace Radegast.Rendering
             else
             {
                 // If we're docked but not active tab, throttle
-                if (!this.RadegastTab.Selected && !this.RadegastTab.Detached)
+                if (!RadegastTab.Selected && !RadegastTab.Detached)
                 {
                     throttle = true;
                 }
@@ -1109,7 +1111,7 @@ namespace Radegast.Rendering
 
                     using (MemoryStream byteData = new MemoryStream(imageBytes))
                     {
-                        img = OpenMetaverse.Imaging.LoadTGAClass.LoadTGA(byteData);
+                        img = LoadTGAClass.LoadTGA(byteData);
                     }
 
                     Bitmap bitmap = (Bitmap)img;
@@ -1158,13 +1160,13 @@ namespace Radegast.Rendering
             {
                 if (RenderSettings.PrimitiveRenderingEnabled)
                 {
-                    List<Primitive> mainPrims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll((Primitive root) => root.ParentID == 0);
+                    List<Primitive> mainPrims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(root => root.ParentID == 0);
                     foreach (Primitive mainPrim in mainPrims)
                     {
                         UpdatePrimBlocking(mainPrim);
                         Client.Network.CurrentSim.ObjectsPrimitives
-                            .FindAll((Primitive child) => child.ParentID == mainPrim.LocalID)
-                            .ForEach((Primitive subPrim) => UpdatePrimBlocking(subPrim));
+                            .FindAll(child => child.ParentID == mainPrim.LocalID)
+                            .ForEach(subPrim => UpdatePrimBlocking(subPrim));
                     }
                 }
 
@@ -1175,13 +1177,13 @@ namespace Radegast.Rendering
                     {
                         UpdatePrimBlocking(avatar);
                         Client.Network.CurrentSim.ObjectsPrimitives
-                            .FindAll((Primitive child) => child.ParentID == avatar.LocalID)
-                            .ForEach((Primitive attachedPrim) =>
+                            .FindAll(child => child.ParentID == avatar.LocalID)
+                            .ForEach(attachedPrim =>
                             {
                                 UpdatePrimBlocking(attachedPrim);
                                 Client.Network.CurrentSim.ObjectsPrimitives
-                                    .FindAll((Primitive child) => child.ParentID == attachedPrim.LocalID)
-                                    .ForEach((Primitive attachedPrimChild) =>
+                                    .FindAll(child => child.ParentID == attachedPrim.LocalID)
+                                    .ForEach(attachedPrimChild =>
                                     {
                                         UpdatePrimBlocking(attachedPrimChild);
                                     });
@@ -1313,7 +1315,6 @@ namespace Radegast.Rendering
                 // We are the root prim, return our interpolated position
                 pos = obj.InterpolatedPosition;
                 rot = obj.InterpolatedRotation;
-                return;
             }
             else
             {
@@ -1349,7 +1350,7 @@ namespace Radegast.Rendering
 
                     // Check for invalid attachment point
                     int attachment_index = (int)obj.BasePrim.PrimData.AttachmentPoint;
-                    if (attachment_index >= GLAvatar.attachment_points.Count()) return;
+                    if (attachment_index >= GLAvatar.attachment_points.Count) return;
                     attachment_point apoint = GLAvatar.attachment_points[attachment_index];
                     skeleton skel = parentav.glavatar.skel;
                     if (!skel.mBones.ContainsKey(apoint.joint)) return;
@@ -1390,7 +1391,7 @@ namespace Radegast.Rendering
         /// Finds the closest distance between the given pos and an object
         /// (Assumes that the object is a box slightly)
         /// </summary>
-        /// <param name="vector3"></param>
+        /// <param name="calcPos"></param>
         /// <param name="p"></param>
         /// <returns></returns>
         private float FindClosestDistanceSquared(Vector3 calcPos, SceneObject p)
@@ -1600,7 +1601,7 @@ namespace Radegast.Rendering
                     GLAvatar ga = new GLAvatar();
 
                     //ga.morph(av);
-                    RenderAvatar ra = new Rendering.RenderAvatar();
+                    RenderAvatar ra = new RenderAvatar();
                     ra.avatar = av;
                     ra.glavatar = ga;
                     updateAVtes(ra);
@@ -1652,7 +1653,7 @@ namespace Radegast.Rendering
                     continue;
                 }
 
-                Logger.Log("Requesting new animation asset " + anim.AnimationID.ToString(), Helpers.LogLevel.Info);
+                Logger.Log("Requesting new animation asset " + anim.AnimationID, Helpers.LogLevel.Info);
 
                 Client.Assets.RequestAsset(anim.AnimationID, AssetType.Animation, false, SourceType.Asset, tid, animRecievedCallback);
             }
@@ -2612,9 +2613,9 @@ namespace Radegast.Rendering
             Render(true);
 
             byte[] color = new byte[4];
-            GL.ReadPixels(x, glControl.Height - y, 1, 1, OpenTK.Graphics.OpenGL.PixelFormat.Rgba, PixelType.UnsignedByte, color);
+            GL.ReadPixels(x, glControl.Height - y, 1, 1, PixelFormat.Rgba, PixelType.UnsignedByte, color);
             float depth = 0f;
-            GL.ReadPixels(x, glControl.Height - y, 1, 1, OpenTK.Graphics.OpenGL.PixelFormat.DepthComponent, PixelType.Float, ref depth);
+            GL.ReadPixels(x, glControl.Height - y, 1, 1, PixelFormat.DepthComponent, PixelType.Float, ref depth);
             OpenTK.Vector3 worldPosTK = OpenTK.Vector3.Zero;
             Math3D.GluUnProject(x, glControl.Height - y, depth, ModelMatrix, ProjectionMatrix, Viewport, out worldPosTK);
             worldPos = RHelp.OMVVector3(worldPosTK);
@@ -2865,7 +2866,6 @@ namespace Radegast.Rendering
             else
             {
                 PendingTasks.Enqueue(GenerateSculptOrMeshPrim(rprim, prim));
-                return;
             }
         }
 
@@ -2988,7 +2988,7 @@ namespace Radegast.Rendering
                 }
                 else
                 {
-                    instance.Client.Assets.RequestImage(textureID, (TextureRequestState state, AssetTexture assetTexture) =>
+                    instance.Client.Assets.RequestImage(textureID, (state, assetTexture) =>
                         {
                             ManagedImage mi;
                             if (state == TextureRequestState.Finished && OpenJPEG.DecodeToImage(assetTexture.AssetData, out mi))
@@ -3272,15 +3272,15 @@ namespace Radegast.Rendering
                 Bone b;
                 if (av.glavatar.skel.mBones.TryGetValue(bone, out b))
                 {
-                    textBox_sx.Text = (b.scale.X - 1.0f).ToString();
-                    textBox_sy.Text = (b.scale.Y - 1.0f).ToString();
-                    textBox_sz.Text = (b.scale.Z - 1.0f).ToString();
+                    textBox_sx.Text = (b.scale.X - 1.0f).ToString(CultureInfo.InvariantCulture);
+                    textBox_sy.Text = (b.scale.Y - 1.0f).ToString(CultureInfo.InvariantCulture);
+                    textBox_sz.Text = (b.scale.Z - 1.0f).ToString(CultureInfo.InvariantCulture);
 
                     float x, y, z;
                     b.rot.GetEulerAngles(out x, out y, out z);
-                    textBox_x.Text = x.ToString();
-                    textBox_y.Text = y.ToString();
-                    textBox_z.Text = z.ToString();
+                    textBox_x.Text = x.ToString(CultureInfo.InvariantCulture);
+                    textBox_y.Text = y.ToString(CultureInfo.InvariantCulture);
+                    textBox_z.Text = z.ToString(CultureInfo.InvariantCulture);
 
                 }
 

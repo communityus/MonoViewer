@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Text;
 using System.Windows.Forms;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -14,16 +9,13 @@ namespace Radegast
     public partial class MediaConsole : DettachableControl
     {
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
+        private GridClient client => instance.Client;
         private Settings s;
         private float m_audioVolume;
 
         private float audioVolume
         {
-            get
-            {
-                return m_audioVolume;
-            }
+            get => m_audioVolume;
             set
             {
                 if (value >= 0f && value < 1f)
@@ -37,7 +29,7 @@ namespace Radegast
         private const int saveConfigTimeout = 1000;
         private bool playing;
         private string currentURL;
-        private Media.Stream parcelStream;
+        private Stream parcelStream;
         private readonly object parcelMusicLock = new object();
 
 
@@ -50,7 +42,7 @@ namespace Radegast
             Disposed += new EventHandler(MediaConsole_Disposed);
 
             this.instance = instance;
-            this.parcelStream = new Media.Stream();
+            parcelStream = new Stream();
 
             s = instance.GlobalSettings;
 
@@ -106,7 +98,7 @@ namespace Radegast
             // Network callbacks
             client.Parcels.ParcelProperties += new EventHandler<ParcelPropertiesEventArgs>(Parcels_ParcelProperties);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         private void MediaConsole_Disposed(object sender, EventArgs e)
@@ -156,8 +148,7 @@ namespace Radegast
             lock (parcelMusicLock)
             {
                 playing = false;
-                if (parcelStream != null)
-                    parcelStream.Dispose();
+                parcelStream?.Dispose();
                 parcelStream = null;
                 lblStation.Tag = lblStation.Text = string.Empty;
                 txtSongTitle.Text = string.Empty;
@@ -170,10 +161,10 @@ namespace Radegast
             {
                 Stop();
                 playing = true;
-                parcelStream = new Media.Stream();
+                parcelStream = new Stream();
                 parcelStream.Volume = audioVolume;
                 parcelStream.PlayStream(currentURL);
-                parcelStream.OnStreamInfo += new Media.Stream.StreamInfoCallback(ParcelMusic_OnStreamInfo);
+                parcelStream.OnStreamInfo += new Stream.StreamInfoCallback(ParcelMusic_OnStreamInfo);
             }
         }
 
@@ -217,9 +208,9 @@ namespace Radegast
             s["parcel_audio_vol"] = OSD.FromReal(audioVolume);
             s["parcel_audio_play"] = OSD.FromBoolean(cbPlayAudioStream.Checked);
             s["parcel_audio_keep_url"] = OSD.FromBoolean(cbKeep.Checked);
-            s["object_audio_vol"] = OSD.FromReal(this.instance.MediaManager.ObjectVolume);
+            s["object_audio_vol"] = OSD.FromReal(instance.MediaManager.ObjectVolume);
             s["object_audio_enable"] = OSD.FromBoolean(cbObjSoundEnable.Checked);
-            s["ui_audio_vol"] = OSD.FromReal(this.instance.MediaManager.UIVolume);
+            s["ui_audio_vol"] = OSD.FromReal(instance.MediaManager.UIVolume);
         }
 
         #region GUI event handlers

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenMetaverse.Assets;
+﻿using OpenMetaverse.Assets;
 using OpenMetaverse;
-using Radegast;
+
 namespace RadegastSpeech.Conversation
 {
     class InvNotecard : Mode
@@ -119,7 +115,6 @@ namespace RadegastSpeech.Conversation
             {
                 ReadSection();
                 e.Handled = true;
-                return;
             }
         }
 

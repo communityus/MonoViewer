@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
-using System.Reflection;
-using System.IO;
-using System.Threading;
 using OpenMetaverse;
 
 namespace Radegast
@@ -20,7 +14,7 @@ namespace Radegast
             ListPlugins();
             PluginsTab_SizeChanged(this, EventArgs.Empty);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void ListPlugins()

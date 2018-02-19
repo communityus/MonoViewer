@@ -30,7 +30,6 @@
 //
 
 using System;
-using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
 using OpenMetaverse;
@@ -41,7 +40,7 @@ namespace Radegast.Rendering
     public class RenderTerrain : SceneObject
     {
         RadegastInstance Instance;
-        GridClient Client { get { return Instance.Client; } }
+        GridClient Client => Instance.Client;
 
         public bool Modified = true;
         float[,] heightTable = new float[256, 256];
@@ -58,11 +57,11 @@ namespace Radegast.Rendering
         bool terrainTextureNeedsUpdate = false;
         float terrainTimeSinceUpdate = RenderSettings.MinimumTimeBetweenTerrainUpdated + 1f; // Update terrain om first run
         MeshmerizerR renderer;
-        Simulator sim { get { return Instance.Client.Network.CurrentSim; } }
+        Simulator sim => Instance.Client.Network.CurrentSim;
 
         public RenderTerrain(RadegastInstance instance)
         {
-            this.Instance = instance;
+            Instance = instance;
             renderer = new MeshmerizerR();
         }
 

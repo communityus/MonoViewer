@@ -29,7 +29,6 @@
 // $Id: TabsConsole.cs 361 2009-10-24 15:04:57Z latifer $
 //
 using System;
-using System.Windows.Forms;
 using OpenMetaverse.StructuredData;
 
 namespace Radegast
@@ -41,7 +40,7 @@ namespace Radegast
         
         public int ReconnectTime
         {
-            get { return reconnectTime; }
+            get => reconnectTime;
             set
             {
                 reconnectTime = value;
@@ -57,7 +56,7 @@ namespace Radegast
             ReconnectTime = time;
             lblAutoReconnect.Text = string.Format("Auto reconnect in {0} seconds.", reconnectTime);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void frmReconnect_Disposed(object sender, EventArgs e)

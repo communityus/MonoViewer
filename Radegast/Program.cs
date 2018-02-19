@@ -30,7 +30,6 @@
 //
 using System;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
 using System.IO;
 using System.Reflection;
 using CommandLine;
@@ -118,7 +117,7 @@ namespace Radegast
 
             // Read command line options
             CommandLineOpts = new CommandLineOpts();
-            CommandLine.Parser.Default.ParseArguments(args, CommandLineOpts);
+            Parser.Default.ParseArguments(args, CommandLineOpts);
 
             // Change current working directory to Radegast install dir
 			string myLoc = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -179,7 +178,7 @@ namespace Radegast
                 }
                 catch (Exception e)
                 {
-                    string errMsg = "Unhandled " + e.ToString() + ": " +
+                    string errMsg = "Unhandled " + e + ": " +
                         e.Message + Environment.NewLine +
                         e.StackTrace + Environment.NewLine;
 

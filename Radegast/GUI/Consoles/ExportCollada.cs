@@ -29,24 +29,15 @@
 // $Id$
 //
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Text;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
 using Monitor = ThreadPoolUtil.Monitor;
 #endif
-using System.Threading;
 using System.Windows.Forms;
 using System.IO;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenMetaverse.Assets;
-using OpenMetaverse.Imaging;
 
 namespace Radegast
 {
@@ -66,7 +57,7 @@ namespace Radegast
             UpdateInfo();
             cbImageType.Text = "TGA";
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
 		}
 		#endregion
 		
@@ -106,7 +97,7 @@ namespace Radegast
                 var img = new SLImageHandler(instance, textureID, string.Empty);
                 img.Height = 96;
                 img.Width = 96;
-                img.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+                img.BorderStyle = BorderStyle.FixedSingle;
                 texturesPanel.Controls.Add(img);
             }
         }

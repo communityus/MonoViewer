@@ -29,12 +29,8 @@
 // $Id$
 //
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using OpenMetaverse;
-using Radegast;
-using OpenMetaverse.Packets;
 
 namespace Radegast.Netcom
 {
@@ -45,21 +41,15 @@ namespace Radegast.Netcom
     public partial class RadegastNetcom : IDisposable
     {
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
+        private GridClient client => instance.Client;
         public LoginOptions loginOptions;
 
-        private bool loggingIn = false;
-        private bool loggedIn = false;
-        private bool teleporting = false;
-        private bool agreeToTos = false;
-        public bool AgreeToTos { get { return agreeToTos; } set { agreeToTos = value; } }
-        private Grid grid;
-        public Grid Grid { get { return grid; } }
+        public bool AgreeToTos { get; set; } = false;
+        public Grid Grid { get; private set; }
 
         // NetcomSync is used for raising certain events on the
         // GUI/main thread. Useful if you're modifying GUI controls
         // in the client app when responding to those events.
-        private Control netcomSync;
 
         #region ClientConnected event
         /// <summary>The event subscribers, null of no subscribers</summary>
@@ -71,8 +61,7 @@ namespace Radegast.Netcom
         protected virtual void OnClientConnected(EventArgs e)
         {
             EventHandler<EventArgs> handler = m_ClientConnected;
-            if (handler != null)
-                handler(this, e);
+            handler?.Invoke(this, e);
         }
 
         /// <summary>Thread sync lock object</summary>
@@ -128,13 +117,7 @@ namespace Radegast.Netcom
             RegisterClientEvents(client);
         }
 
-        private bool CanSyncInvoke
-        {
-            get
-            {
-                return netcomSync != null && !netcomSync.IsDisposed && netcomSync.IsHandleCreated && netcomSync.InvokeRequired;
-            }
-        }
+        private bool CanSyncInvoke => NetcomSync != null && !NetcomSync.IsDisposed && NetcomSync.IsHandleCreated && NetcomSync.InvokeRequired;
 
         public void Dispose()
         {
@@ -147,7 +130,7 @@ namespace Radegast.Netcom
         void Self_IM(object sender, InstantMessageEventArgs e)
         {
             if (CanSyncInvoke)
-                netcomSync.BeginInvoke(new OnInstantMessageRaise(OnInstantMessageReceived), new object[] { e });
+                NetcomSync.BeginInvoke(new OnInstantMessageRaise(OnInstantMessageReceived), new object[] { e });
             else
                 OnInstantMessageReceived(e);
         }
@@ -156,11 +139,11 @@ namespace Radegast.Netcom
         {
             if (e.Status == LoginStatus.Success)
             {
-                loggedIn = true;
+                IsLoggedIn = true;
                 client.Self.RequestBalance();
                 if (CanSyncInvoke)
                 {
-                    netcomSync.BeginInvoke(new ClientConnectedRaise(OnClientConnected), new object[] { EventArgs.Empty });
+                    NetcomSync.BeginInvoke(new ClientConnectedRaise(OnClientConnected), new object[] { EventArgs.Empty });
                 }
                 else
                 {
@@ -176,17 +159,17 @@ namespace Radegast.Netcom
             LoginProgressEventArgs ea = new LoginProgressEventArgs(e.Status, e.Message, string.Empty);
 
             if (CanSyncInvoke)
-                netcomSync.BeginInvoke(new OnClientLoginRaise(OnClientLoginStatus), new object[] { e });
+                NetcomSync.BeginInvoke(new OnClientLoginRaise(OnClientLoginStatus), e);
             else
                 OnClientLoginStatus(e);
         }
 
         void Network_LoggedOut(object sender, LoggedOutEventArgs e)
         {
-            loggedIn = false;
+            IsLoggedIn = false;
 
             if (CanSyncInvoke)
-                netcomSync.BeginInvoke(new OnClientLogoutRaise(OnClientLoggedOut), new object[] { EventArgs.Empty });
+                NetcomSync.BeginInvoke(new OnClientLogoutRaise(OnClientLoggedOut), new object[] { EventArgs.Empty });
             else
                 OnClientLoggedOut(EventArgs.Empty);
         }
@@ -194,10 +177,12 @@ namespace Radegast.Netcom
         void Self_TeleportProgress(object sender, TeleportEventArgs e)
         {
             if (e.Status == TeleportStatus.Finished || e.Status == TeleportStatus.Failed)
-                teleporting = false;
+            {
+                IsTeleporting = false;
+            }
 
             if (CanSyncInvoke)
-                netcomSync.BeginInvoke(new OnTeleportStatusRaise(OnTeleportStatusChanged), new object[] { e });
+                NetcomSync.BeginInvoke(new OnTeleportStatusRaise(OnTeleportStatusChanged), new object[] { e });
             else
                 OnTeleportStatusChanged(e);
         }
@@ -205,18 +190,18 @@ namespace Radegast.Netcom
         private void Self_ChatFromSimulator(object sender, ChatEventArgs e)
         {
             if (CanSyncInvoke)
-                netcomSync.BeginInvoke(new OnChatRaise(OnChatReceived), new object[] { e });
+                NetcomSync.BeginInvoke(new OnChatRaise(OnChatReceived), new object[] { e });
             else
                 OnChatReceived(e);
         }
 
         void Network_Disconnected(object sender, DisconnectedEventArgs e)
         {
-            loggedIn = false;
+            IsLoggedIn = false;
             instance.MarkEndExecution();
 
             if (CanSyncInvoke)
-                netcomSync.BeginInvoke(new OnClientDisconnectRaise(OnClientDisconnected), new object[] { e });
+                NetcomSync.BeginInvoke(new OnClientDisconnectRaise(OnClientDisconnected), new object[] { e });
             else
                 OnClientDisconnected(e);
         }
@@ -224,7 +209,7 @@ namespace Radegast.Netcom
         void Self_MoneyBalance(object sender, BalanceEventArgs e)
         {
             if (CanSyncInvoke)
-                netcomSync.BeginInvoke(new OnMoneyBalanceRaise(OnMoneyBalanceUpdated), new object[] { e });
+                NetcomSync.BeginInvoke(new OnMoneyBalanceRaise(OnMoneyBalanceUpdated), new object[] { e });
             else
                 OnMoneyBalanceUpdated(e);
         }
@@ -232,14 +217,14 @@ namespace Radegast.Netcom
         void Self_AlertMessage(object sender, AlertMessageEventArgs e)
         {
             if (CanSyncInvoke)
-                netcomSync.BeginInvoke(new OnAlertMessageRaise(OnAlertMessageReceived), new object[] { e });
+                NetcomSync.BeginInvoke(new OnAlertMessageRaise(OnAlertMessageReceived), new object[] { e });
             else
                 OnAlertMessageReceived(e);
         }
 
         public void Login()
         {
-            loggingIn = true;
+            IsLoggingIn = true;
 
             // Report crashes only once and not on relogs/reconnects
             LastExecStatus execStatus = instance.GetLastExecStatus();
@@ -261,7 +246,7 @@ namespace Radegast.Netcom
 
             if (ea.Cancel)
             {
-                loggingIn = false;
+                IsLoggingIn = false;
                 return;
             }
 
@@ -311,17 +296,17 @@ namespace Radegast.Netcom
                 loginOptions.FirstName, loginOptions.LastName, password,
                 loginOptions.Channel, loginOptions.Version);
 
-            grid = loginOptions.Grid;
+            Grid = loginOptions.Grid;
             loginParams.Start = startLocation;
             loginParams.AgreeToTos = AgreeToTos;
-            loginParams.URI = grid.LoginURI;
+            loginParams.URI = Grid.LoginURI;
             loginParams.LastExecEvent = loginOptions.LastExecEvent;
             client.Network.BeginLogin(loginParams);
         }
 
         public void Logout()
         {
-            if (!loggedIn)
+            if (!IsLoggedIn)
             {
                 OnClientLoggedOut(EventArgs.Empty);
                 return;
@@ -336,7 +321,7 @@ namespace Radegast.Netcom
 
         public void ChatOut(string chat, ChatType type, int channel)
         {
-            if (!loggedIn) return;
+            if (!IsLoggedIn) return;
 
             client.Self.Chat(chat, channel, type);
             OnChatSent(new ChatSentEventArgs(chat, type, channel));
@@ -344,7 +329,7 @@ namespace Radegast.Netcom
 
         public void SendInstantMessage(string message, UUID target, UUID session)
         {
-            if (!loggedIn) return;
+            if (!IsLoggedIn) return;
 
             client.Self.InstantMessage(
                 loginOptions.FullName, target, message, session, InstantMessageDialog.MessageFromAgent,
@@ -355,7 +340,7 @@ namespace Radegast.Netcom
 
         public void SendIMStartTyping(UUID target, UUID session)
         {
-            if (!loggedIn) return;
+            if (!IsLoggedIn) return;
 
             client.Self.InstantMessage(
                 loginOptions.FullName, target, "typing", session, InstantMessageDialog.StartTyping,
@@ -364,7 +349,7 @@ namespace Radegast.Netcom
 
         public void SendIMStopTyping(UUID target, UUID session)
         {
-            if (!loggedIn) return;
+            if (!IsLoggedIn) return;
 
             client.Self.InstantMessage(
                 loginOptions.FullName, target, "typing", session, InstantMessageDialog.StopTyping,
@@ -373,42 +358,29 @@ namespace Radegast.Netcom
 
         public void Teleport(string sim, Vector3 coordinates)
         {
-            if (!loggedIn) return;
-            if (teleporting) return;
+            if (!IsLoggedIn) return;
+            if (IsTeleporting) return;
 
             TeleportingEventArgs ea = new TeleportingEventArgs(sim, coordinates);
             OnTeleporting(ea);
             if (ea.Cancel) return;
 
-            teleporting = true;
+            IsTeleporting = true;
             client.Self.Teleport(sim, coordinates);
         }
 
-        public bool IsLoggingIn
-        {
-            get { return loggingIn; }
-        }
+        public bool IsLoggingIn { get; private set; } = false;
 
-        public bool IsLoggedIn
-        {
-            get { return loggedIn; }
-        }
+        public bool IsLoggedIn { get; private set; } = false;
 
-        public bool IsTeleporting
-        {
-            get { return teleporting; }
-        }
+        public bool IsTeleporting { get; private set; } = false;
 
         public LoginOptions LoginOptions
         {
-            get { return loginOptions; }
-            set { loginOptions = value; }
+            get => loginOptions;
+            set => loginOptions = value;
         }
 
-        public Control NetcomSync
-        {
-            get { return netcomSync; }
-            set { netcomSync = value; }
-        }
+        public Control NetcomSync { get; set; }
     }
 }

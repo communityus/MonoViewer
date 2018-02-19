@@ -29,23 +29,22 @@
 // $Id$
 //
 using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
 using System.ComponentModel;
 using OpenMetaverse;
 
 namespace Radegast
 {
-    public class AgentNameTextBox : System.Windows.Forms.TextBox
+    public class AgentNameTextBox : TextBox
     {
         private UUID agentID;
-        private GridClient client { get { return RadegastInstance.GlobalInstance.Client; } }
-        private RadegastInstance instance { get { return RadegastInstance.GlobalInstance; } }
+        private GridClient client => RadegastInstance.GlobalInstance.Client;
+        private RadegastInstance instance => RadegastInstance.GlobalInstance;
 
         [Browsable(false)]
         public UUID AgentID
         {
-            get { return agentID; }
+            get => agentID;
 
             set
             {
@@ -67,7 +66,6 @@ namespace Radegast
         }
 
         public AgentNameTextBox()
-            : base()
         {
             SetStyle(ControlStyles.SupportsTransparentBackColor, true);
             Disposed += new EventHandler(CleanupHandlers);
@@ -103,7 +101,7 @@ namespace Radegast
                 return;
             }
 
-            base.Text = name;
+            Text = name;
         }
     }
 }

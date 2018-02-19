@@ -38,7 +38,7 @@ namespace Radegast
     public partial class Gesture : DettachableControl
     {
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
+        private GridClient client => instance.Client;
         private InventoryGesture gesture;
         private AssetGesture gestureAsset;
 
@@ -59,7 +59,7 @@ namespace Radegast
             tlblStatus.Text = "Downloading...";
             client.Assets.RequestAsset(gesture.AssetUUID, AssetType.Gesture, true, Assets_OnAssetReceived);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void Guesture_Disposed(object sender, EventArgs e)

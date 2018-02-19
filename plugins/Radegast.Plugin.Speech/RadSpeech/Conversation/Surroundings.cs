@@ -29,10 +29,6 @@
 // $Id: Surroundings.cs 203 2009-10-06 17:26:02Z mojitotech@gmail.com $
 //
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using Radegast;
 using OpenMetaverse;
 
@@ -40,7 +36,7 @@ namespace RadegastSpeech.Conversation
 {
     class Surroundings : Mode
     {
-        private Radegast.ObjectsConsole obTab;
+        private ObjectsConsole obTab;
         public bool Announce { get; set; }
         private Primitive currentPrim = new Primitive();
         

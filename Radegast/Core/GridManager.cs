@@ -31,7 +31,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -57,8 +56,8 @@ namespace Radegast
         public Grid(string ID, string name, string loginURI)
         {
             this.ID = ID;
-            this.Name = name;
-            this.LoginURI = loginURI;
+            Name = name;
+            LoginURI = loginURI;
         }
 
         public override string ToString()
@@ -124,7 +123,7 @@ namespace Radegast
 
         public void RegisterGrid(Grid grid)
         {
-            int ix = Grids.FindIndex((Grid g) => { return g.ID == grid.ID; });
+            int ix = Grids.FindIndex(g => { return g.ID == grid.ID; });
             if (ix < 0)
             {
                 Grids.Add(grid);
@@ -135,10 +134,7 @@ namespace Radegast
             }
         }
 
-        public Grid this[int ix]
-        {
-            get { return Grids[ix]; }
-        }
+        public Grid this[int ix] => Grids[ix];
 
         public Grid this[string gridID]
         {
@@ -161,9 +157,6 @@ namespace Radegast
             return false;
         }
 
-        public int Count
-        {
-            get { return Grids.Count; }
-        }
+        public int Count => Grids.Count;
     }
 }

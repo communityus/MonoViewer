@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Windows.Forms;
 using System.Net;
-using System.Text.RegularExpressions;
 using System.IO;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
@@ -18,14 +14,13 @@ using Monitor = ThreadPoolUtil.Monitor;
 using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Http;
-using OpenMetaverse.Assets;
 
 namespace Radegast
 {
     public partial class MapControl : UserControl
     {
         RadegastInstance Instance;
-        GridClient Client { get { return Instance.Client; } }
+        GridClient Client => Instance.Client;
         ParallelDownloader downloader;
         Color background;
         float zoom;
@@ -41,7 +36,6 @@ namespace Radegast
         GridRegion targetRegion, nullRegion;
         bool centered = false;
         int PixRegS;
-        float maxZoom = 6f, minZoom = 0.5f;
         string targetParcelName = null;
         System.Threading.Timer repaint;
         bool needRepaint = false;
@@ -49,15 +43,15 @@ namespace Radegast
         public bool UseExternalTiles = false;
         public event EventHandler<MapTargetChangedEventArgs> MapTargetChanged;
         public event EventHandler<EventArgs> ZoomChanged;
-        public float MaxZoom { get { return maxZoom; } }
-        public float MinZoom { get { return minZoom; } }
+        public float MaxZoom { get; } = 6f;
+        public float MinZoom { get; } = 0.5f;
 
         public MapControl(RadegastInstance instance)
         {
             Zoom = 1.0f;
             InitializeComponent();
             Disposed += new EventHandler(MapControl_Disposed);
-            this.Instance = instance;
+            Instance = instance;
 
             downloader = new ParallelDownloader();
 
@@ -73,7 +67,7 @@ namespace Radegast
             Instance.ClientChanged += new EventHandler<ClientChangedEventArgs>(Instance_ClientChanged);
             RegisterClientEvents();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void MapControl_Disposed(object sender, EventArgs e)
@@ -97,8 +91,9 @@ namespace Radegast
                 lock (regionTiles)
                 {
                     foreach (Image img in regionTiles.Values)
-                        if (img != null)
-                            img.Dispose();
+                    {
+                        img?.Dispose();
+                    }
                     regionTiles.Clear();
                 }
                 regionTiles = null;
@@ -177,15 +172,15 @@ namespace Radegast
 
         public float Zoom
         {
-            get { return zoom; }
+            get => zoom;
             set
             {
-                if (value >= minZoom && value <= maxZoom)
+                if (value >= MinZoom && value <= MaxZoom)
                 {
                     zoom = value;
                     pixelsPerMeter = 1f / zoom;
                     PixRegS = (int)(regionSize / zoom);
-                    Logger.DebugLog("Region tile size = " + PixRegS.ToString());
+                    Logger.DebugLog("Region tile size = " + PixRegS);
                     Invalidate();
                 }
             }
@@ -237,10 +232,7 @@ namespace Radegast
                 {
                     targetRegion = regions[handle];
                     GetTargetParcel();
-                    if (MapTargetChanged != null)
-                    {
-                        MapTargetChanged(this, new MapTargetChangedEventArgs(targetRegion, (int)localX, (int)localY));
-                    }
+                    MapTargetChanged?.Invoke(this, new MapTargetChangedEventArgs(targetRegion, (int)localX, (int)localY));
                 }
                 else
                 {
@@ -318,11 +310,11 @@ namespace Radegast
                 else
                 {
                     downloader.QueueDownlad(
-                        new Uri(string.Format("{0}/?texture_id={1}", url.ToString(), imageID.ToString())),
+                        new Uri(string.Format("{0}/?texture_id={1}", url, imageID)),
                         30 * 1000,
                         "image/x-j2c",
                         null,
-                        (HttpWebRequest request, HttpWebResponse response, byte[] responseData, Exception error) =>
+                        (request, response, responseData, error) =>
                         {
                             if (error == null && responseData != null)
                             {
@@ -345,7 +337,7 @@ namespace Radegast
             }
             else
             {
-                Client.Assets.RequestImage(imageID, (TextureRequestState state, AssetTexture assetTexture) =>
+                Client.Assets.RequestImage(imageID, (state, assetTexture) =>
                 {
                     switch (state)
                     {
@@ -414,7 +406,7 @@ namespace Radegast
                     20 * 1000,
                     null,
                     null,
-                    (HttpWebRequest request, HttpWebResponse response, byte[] responseData, Exception error) =>
+                    (request, response, responseData, error) =>
                     {
                         if (error == null && responseData != null)
                         {
@@ -464,11 +456,12 @@ namespace Radegast
             if (tile != null)
             {
                 int targetSize = 256;
-                for (targetSize = 128; targetSize > PixRegS; targetSize /= 2) ;
+                for (targetSize = 128; targetSize > PixRegS; targetSize /= 2)
+                { }
                 targetSize *= 2;
                 if (targetSize != 256)
                 {
-                    string id = string.Format("{0},{1}", handle, targetSize);
+                    string id = $"{handle},{targetSize}";
                     if (smallerTiles.ContainsKey(id))
                     {
                         tile = smallerTiles[id];
@@ -708,8 +701,7 @@ namespace Radegast
             else
                 Zoom -= 0.25f;
 
-            if (ZoomChanged != null)
-                ZoomChanged(this, EventArgs.Empty);
+            ZoomChanged?.Invoke(this, EventArgs.Empty);
         }
 
         bool dragging = false;
@@ -735,7 +727,7 @@ namespace Radegast
                 if (parcelID != UUID.Zero)
                 {
                     ManualResetEvent done = new ManualResetEvent(false);
-                    EventHandler<ParcelInfoReplyEventArgs> handler = (object sender, ParcelInfoReplyEventArgs e) =>
+                    EventHandler<ParcelInfoReplyEventArgs> handler = (sender, e) =>
                     {
                         if (e.Parcel.ID == parcelID)
                         {
@@ -771,10 +763,7 @@ namespace Radegast
                     {
                         targetRegion = regions[handle];
                         GetTargetParcel();
-                        if (MapTargetChanged != null)
-                        {
-                            MapTargetChanged(this, new MapTargetChangedEventArgs(targetRegion, (int)localX, (int)localY));
-                        }
+                        MapTargetChanged?.Invoke(this, new MapTargetChangedEventArgs(targetRegion, (int)localX, (int)localY));
                     }
                     else
                     {
@@ -824,20 +813,9 @@ namespace Radegast
         Queue<QueuedItem> queue = new Queue<QueuedItem>();
         List<HttpWebRequest> activeDownloads = new List<HttpWebRequest>();
 
-        int m_ParallelDownloads = 15;
-        X509Certificate2 m_ClientCert;
+        public int ParallelDownloads { get; set; } = 15;
 
-        public int ParallelDownloads
-        {
-            get { return m_ParallelDownloads; }
-            set { m_ParallelDownloads = value; }
-        }
-
-        public X509Certificate2 ClientCert
-        {
-            get { return m_ClientCert; }
-            set { m_ClientCert = value; }
-        }
+        public X509Certificate2 ClientCert { get; set; }
 
         public ParallelDownloader()
         {
@@ -860,15 +838,15 @@ namespace Radegast
 
         protected virtual HttpWebRequest SetupRequest(Uri address, string acceptHeader)
         {
-            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(address);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(address);
             request.Method = "GET";
 
             if (!string.IsNullOrEmpty(acceptHeader))
                 request.Accept = acceptHeader;
 
             // Add the client certificate to the request if one was given
-            if (m_ClientCert != null)
-                request.ClientCertificates.Add(m_ClientCert);
+            if (ClientCert != null)
+                request.ClientCertificates.Add(ClientCert);
 
             // Leave idle connections to this endpoint open for up to 60 seconds
             request.ServicePoint.MaxIdleTime = 0;
@@ -895,13 +873,13 @@ namespace Radegast
                     for (int i = nr; i < ParallelDownloads && queue.Count > 0; i++)
                     {
                         QueuedItem item = queue.Dequeue();
-                        Logger.DebugLog("Requesting " + item.address.ToString());
+                        Logger.DebugLog("Requesting " + item.address);
                         HttpWebRequest req = SetupRequest(item.address, item.contentType);
                         CapsBase.DownloadDataAsync(
                             req,
                             item.millisecondsTimeout,
                             item.downloadProgressCallback,
-                            (HttpWebRequest request, HttpWebResponse response, byte[] responseData, Exception error) =>
+                            (request, response, responseData, error) =>
                             {
                                 lock (activeDownloads) activeDownloads.Remove(request);
                                 item.completedCallback(request, response, responseData, error);

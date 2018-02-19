@@ -31,7 +31,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Windows.Forms;
 using System.Threading;
 using OpenMetaverse;
 
@@ -51,11 +50,6 @@ namespace Radegast.Commands
 
             this.instance = instance;
             args = new List<string>();
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
         }
 
         bool arg(string a)
@@ -84,7 +78,7 @@ namespace Radegast.Commands
                         else
                         {
                             ManualResetEvent gotName = new ManualResetEvent(false);
-                            EventHandler<ObjectPropertiesFamilyEventArgs> handler = (object sender, ObjectPropertiesFamilyEventArgs e) =>
+                            EventHandler<ObjectPropertiesFamilyEventArgs> handler = (sender, e) =>
                             {
                                 if (e.Properties.ObjectID == seat.ID)
                                     gotName.Set();

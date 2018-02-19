@@ -64,10 +64,7 @@ namespace Radegast.Media
 
         Timer updateTimer = null;
         uint updateIntervl = 500;
-        /// <summary>
-        /// Creates a new sound object
-        /// </summary>
-        /// <param name="system">Sound system</param>
+
         public Stream()
         {
         }
@@ -151,7 +148,7 @@ namespace Radegast.Media
                     }
                     catch (Exception ex)
                     {
-                        Logger.Log("Error playing stream: " + ex.ToString(), Helpers.LogLevel.Debug);
+                        Logger.Log("Error playing stream: " + ex, Helpers.LogLevel.Debug);
                     }
                 }));
         }

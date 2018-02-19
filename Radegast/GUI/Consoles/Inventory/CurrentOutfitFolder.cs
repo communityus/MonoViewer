@@ -29,13 +29,10 @@
 // $Id$
 //
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using LibreMetaverse;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 
 namespace Radegast
 {
@@ -56,8 +53,8 @@ namespace Radegast
         #region Construction and disposal
         public CurrentOutfitFolder(RadegastInstance instance)
         {
-            this.Instance = instance;
-            this.Client = instance.Client;
+            Instance = instance;
+            Client = instance.Client;
             Instance.ClientChanged += new EventHandler<ClientChangedEventArgs>(instance_ClientChanged);
             RegisterClientEvents(Client);
         }
@@ -480,7 +477,7 @@ namespace Radegast
         /// <summary>
         /// Replaces the current outfit and updates COF links accordingly
         /// </summary>
-        /// <param name="outfit">List of new wearables and attachments that comprise the new outfit</param>
+        /// <param name="newOutfit">List of new wearables and attachments that comprise the new outfit</param>
         public void ReplaceOutfit(List<InventoryItem> newOutfit)
         {
             // Resolve inventory links
@@ -596,7 +593,7 @@ namespace Radegast
         /// <summary>
         /// Remove an item from the current outfit
         /// </summary>
-        /// <param name="items">Item to remove</param>
+        /// <param name="item">Item to remove</param>
         public void RemoveFromOutfit(InventoryItem item)
         {
             RemoveFromOutfit(new List<InventoryItem>(1) { item });

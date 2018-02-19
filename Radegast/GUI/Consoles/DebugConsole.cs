@@ -49,7 +49,7 @@ namespace Radegast
             Disposed += new EventHandler(DebugConsole_Disposed);
             RadegastAppender.Log += new EventHandler<LogEventArgs>(RadegastAppender_Log);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void DebugConsole_Disposed(object sender, EventArgs e)
@@ -68,7 +68,7 @@ namespace Radegast
             }
 
             rtbLog.SelectionColor = Color.FromKnownColor(KnownColor.WindowText);
-            rtbLog.AppendText(string.Format("{0} [", e.LogEntry.TimeStamp.ToString("HH:mm:ss")));
+            rtbLog.AppendText(string.Format("{0:HH:mm:ss} [", e.LogEntry.TimeStamp));
 
             if (e.LogEntry.Level == Level.Error)
             {
@@ -89,7 +89,7 @@ namespace Radegast
 
             rtbLog.AppendText(e.LogEntry.Level.Name);
             rtbLog.SelectionColor = Color.FromKnownColor(KnownColor.WindowText);
-            rtbLog.AppendText(string.Format("]: - {0}{1}", e.LogEntry.MessageObject.ToString(), Environment.NewLine));
+            rtbLog.AppendText(string.Format("]: - {0}{1}", e.LogEntry.MessageObject, Environment.NewLine));
         }
 
         private void rtbLog_LinkClicked(object sender, LinkClickedEventArgs e)

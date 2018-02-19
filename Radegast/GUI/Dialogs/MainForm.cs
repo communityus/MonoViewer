@@ -31,6 +31,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Timers;
@@ -48,8 +49,6 @@ using System.IO;
 using System.Web;
 using Radegast.Netcom;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenMetaverse.Assets;
 
 namespace Radegast
 {
@@ -62,20 +61,13 @@ namespace Radegast
         public delegate void ProfileHandlerDelegate(string agentName, UUID agentID);
         public ProfileHandlerDelegate ShowAgentProfile;
 
-        public TabsConsole TabConsole
-        {
-            get { return tabsConsole; }
-        }
+        public TabsConsole TabConsole { get; private set; }
 
         public MapConsole WorldMap
         {
             get
             {
-                if (MapTab != null)
-                {
-                    return (MapConsole)MapTab.Control;
-                }
-                return null;
+                return (MapConsole) MapTab?.Control;
             }
         }
 
@@ -83,9 +75,9 @@ namespace Radegast
         {
             get
             {
-                if (tabsConsole.TabExists("map"))
+                if (TabConsole.TabExists("map"))
                 {
-                    return tabsConsole.Tabs["map"];
+                    return TabConsole.Tabs["map"];
                 }
                 else
                 {
@@ -94,45 +86,34 @@ namespace Radegast
             }
         }
 
-        public MediaConsole MediaConsole { get { return mediaConsole; } }
+        public MediaConsole MediaConsole { get; private set; }
 
         /// <summary>
         /// Drop down that contains the tools menu
         /// </summary>
-        public ToolStripDropDownButton ToolsMenu
-        {
-            get { return tbnTools; }
-        }
+        public ToolStripDropDownButton ToolsMenu => tbnTools;
 
         /// <summary>
         /// Dropdown that contains the heelp menu
         /// </summary>
-        public ToolStripDropDownButton HelpMenu
-        {
-            get { return tbtnHelp; }
-        }
+        public ToolStripDropDownButton HelpMenu => tbtnHelp;
 
         /// <summary>
         /// Drop down that contants the plugins menu. Make sure to set it Visible if
         /// you add items to this menu, it's hidden by default
         /// </summary>
-        public ToolStripDropDownButton PluginsMenu
-        {
-            get { return tbnPlugins; }
-        }
+        public ToolStripDropDownButton PluginsMenu => tbnPlugins;
 
         #endregion
 
         #region Private members
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
-        private RadegastNetcom netcom { get { return instance.Netcom; } }
-        private TabsConsole tabsConsole;
+        private GridClient client => instance.Client;
+        private RadegastNetcom netcom => instance.Netcom;
         private System.Timers.Timer statusTimer;
         private AutoPilot ap;
         private bool AutoPilotActive = false;
         private TransparentButton btnDialogNextControl;
-        private MediaConsole mediaConsole;
         private SlUriParser uriParser;
         #endregion
 
@@ -179,12 +160,20 @@ namespace Radegast
             netcom.ClientLoggedOut += new EventHandler(netcom_ClientLoggedOut);
             netcom.ClientDisconnected += new EventHandler<DisconnectedEventArgs>(netcom_ClientDisconnected);
             instance.Names.NameUpdated += new EventHandler<UUIDNameReplyEventArgs>(Names_NameUpdated);
+            client.Network.SimChanged += Network_SimChanged;
+
             RegisterClientEvents(client);
 
             InitializeStatusTimer();
             RefreshWindowTitle();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
+        }
+
+        private void Network_SimChanged(object sender, SimChangedEventArgs e)
+        {
+            SetHoverHeightFromSettings();
+            client.Network.CurrentSim.Caps.CapabilitiesReceived += Caps_CapabilitiesReceived;
         }
 
         private void RegisterClientEvents(GridClient client)
@@ -227,7 +216,7 @@ namespace Radegast
                 instance.Names.NameUpdated -= new EventHandler<UUIDNameReplyEventArgs>(Names_NameUpdated);
             }
 
-            this.instance.CleanUp();
+            instance.CleanUp();
         }
         #endregion
 
@@ -294,7 +283,7 @@ namespace Radegast
 
             if (instance.MediaManager.SoundSystemAvailable)
             {
-                mediaConsole = new MediaConsole(instance);
+                MediaConsole = new MediaConsole(instance);
                 tbtnMedia.Visible = true;
             }
         }
@@ -324,7 +313,7 @@ namespace Radegast
             // disconnect, since ShowDialog() blocks GUI thread
             (new Thread(new ThreadStart(() =>
                 {
-                    System.Threading.Thread.Sleep(3000);
+                    Thread.Sleep(3000);
                     DisplayAutoReconnectForm();
                 }
                 ))
@@ -358,6 +347,12 @@ namespace Radegast
 
                 statusTimer.Start();
                 RefreshWindowTitle();
+
+                if (instance.GlobalSettings.ContainsKey("AvatarHoverOffsetZ"))
+                {
+                    var hoverHeight = instance.GlobalSettings["AvatarHoverOffsetZ"];
+                    Client.Self.SetHoverHeight(hoverHeight);
+                }
             }
         }
 
@@ -371,8 +366,7 @@ namespace Radegast
             loginToolStripMenuItem.Enabled = true;
             InAutoReconnect = false;
 
-            if (statusTimer != null)
-                statusTimer.Stop();
+            statusTimer?.Stop();
 
             RefreshStatusBar();
             RefreshWindowTitle();
@@ -395,7 +389,7 @@ namespace Radegast
         {
             if (instance.GlobalSettings["confirm_exit"].AsBoolean())
             {
-                if (MessageBox.Show("Are you sure you want to exit Radegast?", "Confirm Exit", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != System.Windows.Forms.DialogResult.Yes)
+                if (MessageBox.Show("Are you sure you want to exit Radegast?", "Confirm Exit", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 {
                     e.Cancel = true;
                     return;
@@ -409,18 +403,18 @@ namespace Radegast
                 statusTimer = null;
             }
 
-            if (mediaConsole != null)
+            if (MediaConsole != null)
             {
-                if (tabsConsole.TabExists("media"))
+                if (TabConsole.TabExists("media"))
                 {
-                    tabsConsole.Tabs["media"].AllowClose = true;
-                    tabsConsole.Tabs["media"].Close();
+                    TabConsole.Tabs["media"].AllowClose = true;
+                    TabConsole.Tabs["media"].Close();
                 }
                 else
                 {
-                    mediaConsole.Dispose();
+                    MediaConsole.Dispose();
                 }
-                mediaConsole = null;
+                MediaConsole = null;
             }
 
             if (netcom.IsLoggedIn)
@@ -491,14 +485,14 @@ namespace Radegast
             {
                 tlblLoginName.Text = instance.Names.Get(client.Self.AgentID, client.Self.Name);
                 tlblMoneyBalance.Text = client.Self.Balance.ToString();
-                icoHealth.Text = client.Self.Health.ToString() + "%";
+                icoHealth.Text = client.Self.Health.ToString(CultureInfo.CurrentCulture) + "%";
 
                 var cs = client.Network.CurrentSim;
                 tlblRegionInfo.Text =
                     (cs == null ? "No region" : cs.Name) +
-                    " (" + Math.Floor(client.Self.SimPosition.X).ToString() + ", " +
-                    Math.Floor(client.Self.SimPosition.Y).ToString() + ", " +
-                    Math.Floor(client.Self.SimPosition.Z).ToString() + ")";
+                    " (" + Math.Floor(client.Self.SimPosition.X).ToString(CultureInfo.CurrentCulture) + ", " +
+                    Math.Floor(client.Self.SimPosition.Y).ToString(CultureInfo.CurrentCulture) + ", " +
+                    Math.Floor(client.Self.SimPosition.Z).ToString(CultureInfo.CurrentCulture) + ")";
             }
             else
             {
@@ -548,7 +542,7 @@ namespace Radegast
                 sb.Append("Logged Out");
             }
 
-            this.Text = sb.ToString();
+            Text = sb.ToString();
 
             // When minimized to tray, update tray tool tip also
             if (WindowState == FormWindowState.Minimized && instance.GlobalSettings["minimize_to_tray"])
@@ -582,9 +576,9 @@ namespace Radegast
         #region Initialization, configuration, and key shortcuts
         private void InitializeTabsConsole()
         {
-            tabsConsole = new TabsConsole(instance);
-            tabsConsole.Dock = DockStyle.Fill;
-            toolStripContainer1.ContentPanel.Controls.Add(tabsConsole);
+            TabConsole = new TabsConsole(instance);
+            TabConsole.Dock = DockStyle.Fill;
+            toolStripContainer1.ContentPanel.Controls.Add(TabConsole);
         }
 
         private void frmMain_KeyDown(object sender, KeyEventArgs e)
@@ -609,7 +603,7 @@ namespace Radegast
             if (e.Modifiers == Keys.Control && e.KeyCode == Keys.W)
             {
                 e.Handled = e.SuppressKeyPress = true;
-                RadegastTab tab = tabsConsole.SelectedTab;
+                RadegastTab tab = TabConsole.SelectedTab;
 
                 if (tab.AllowClose)
                 {
@@ -646,7 +640,7 @@ namespace Radegast
                 {
                     case Keys.D1:
                         e.Handled = e.SuppressKeyPress = true;
-                        tabsConsole.Tabs["chat"].Select();
+                        TabConsole.Tabs["chat"].Select();
                         return;
 
                     case Keys.D2:
@@ -713,7 +707,6 @@ namespace Radegast
                     TabConsole.SelectNextTab();
                 }
                 e.Handled = e.SuppressKeyPress = true;
-                return;
             }
         }
 
@@ -724,11 +717,11 @@ namespace Radegast
             if (firstLoad)
             {
                 firstLoad = false;
-                tabsConsole.SelectTab("login");
+                TabConsole.SelectTab("login");
                 ResourceManager rm = Properties.Resources.ResourceManager;
-                ResourceSet set = rm.GetResourceSet(System.Globalization.CultureInfo.CurrentCulture, true, true);
+                ResourceSet set = rm.GetResourceSet(CultureInfo.CurrentCulture, true, true);
                 System.Collections.IDictionaryEnumerator de = set.GetEnumerator();
-                while (de.MoveNext() == true)
+                while (de.MoveNext())
                 {
                     if (de.Entry.Value is Image)
                     {
@@ -741,7 +734,7 @@ namespace Radegast
 
                 if (!instance.GlobalSettings["theme_compatibility_mode"] && instance.PlainColors)
                 {
-                    pnlDialog.BackColor = System.Drawing.Color.FromArgb(120, 220, 255);
+                    pnlDialog.BackColor = Color.FromArgb(120, 220, 255);
                 }
 
             }
@@ -766,7 +759,7 @@ namespace Radegast
                 {
                     profile = new frmProfile(instance, name, agentID);
 
-                    profile.Disposed += (object sender, EventArgs e) =>
+                    profile.Disposed += (sender, e) =>
                         {
                             lock (shownProfiles)
                             {
@@ -824,7 +817,7 @@ namespace Radegast
                 {
                     profile = new frmGroupInfo(instance, group);
 
-                    profile.Disposed += (object sender, EventArgs e) =>
+                    profile.Disposed += (sender, e) =>
                         {
                             lock (shownGroupProfiles)
                             {
@@ -902,10 +895,7 @@ namespace Radegast
         #region Notifications
         CircularList<Control> notifications = new CircularList<Control>();
 
-        public Color NotificationBackground
-        {
-            get { return pnlDialog.BackColor; }
-        }
+        public Color NotificationBackground => pnlDialog.BackColor;
 
         void ResizeNotificationByControl(Control active)
         {
@@ -956,10 +946,7 @@ namespace Radegast
 
             btnDialogNextControl.Visible = notifications.Count > 1;
 
-            if (active != null)
-            {
-                active.Focus();
-            }
+            active?.Focus();
         }
 
         public void RemoveNotification(Control control)
@@ -1207,7 +1194,7 @@ namespace Radegast
                 UUID.Random(),
                 InventoryType.Landmark,
                 PermissionMask.All,
-                (bool success, InventoryItem item) =>
+                (success, item) =>
                 {
                     if (success)
                     {
@@ -1225,7 +1212,7 @@ namespace Radegast
 
         private void timerWorldClock_Tick(object sender, EventArgs e)
         {
-            lblTime.Text = instance.GetWorldTime().ToString("h:mm tt", System.Globalization.CultureInfo.InvariantCulture);
+            lblTime.Text = instance.GetWorldTime().ToString("h:mm tt", CultureInfo.InvariantCulture);
         }
 
         private void reportBugsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1254,12 +1241,12 @@ namespace Radegast
             if (updateChecker != null)
             {
                 if (ManualUpdateCheck)
-                    tabsConsole.DisplayNotificationInChat("Update check already in progress.");
+                    TabConsole.DisplayNotificationInChat("Update check already in progress.");
                 return;
             }
 
             if (ManualUpdateCheck)
-                tabsConsole.DisplayNotificationInChat("Checking for updates...", ChatBufferTextStyle.StatusBlue);
+                TabConsole.DisplayNotificationInChat("Checking for updates...", ChatBufferTextStyle.StatusBlue);
             updateChecker = new UpdateChecker();
             updateChecker.OnUpdateInfoReceived += OnUpdateInfoReceived;
             updateChecker.StartCheck();
@@ -1267,7 +1254,7 @@ namespace Radegast
 
         private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tabsConsole.SelectTab("chat");
+            TabConsole.SelectTab("chat");
             StartUpdateCheck(true);
         }
 
@@ -1282,23 +1269,23 @@ namespace Radegast
             if (!e.Success)
             {
                 if (ManualUpdateCheck)
-                    tabsConsole.DisplayNotificationInChat("Error: Failed connecting to the update site.", ChatBufferTextStyle.StatusBlue);
+                    TabConsole.DisplayNotificationInChat("Error: Failed connecting to the update site.", ChatBufferTextStyle.StatusBlue);
             }
             else
             {
                 if (!ManualUpdateCheck && e.Info.DisplayMOTD)
                 {
-                    tabsConsole.DisplayNotificationInChat(e.Info.MOTD, ChatBufferTextStyle.StatusBlue);
+                    TabConsole.DisplayNotificationInChat(e.Info.MOTD, ChatBufferTextStyle.StatusBlue);
                 }
 
                 if (e.Info.UpdateAvailable)
                 {
-                    tabsConsole.DisplayNotificationInChat("New version available at " + e.Info.DownloadSite, ChatBufferTextStyle.Alert);
+                    TabConsole.DisplayNotificationInChat("New version available at " + e.Info.DownloadSite, ChatBufferTextStyle.Alert);
                 }
                 else
                 {
                     if (ManualUpdateCheck)
-                        tabsConsole.DisplayNotificationInChat("Your version is up to date.", ChatBufferTextStyle.StatusBlue);
+                        TabConsole.DisplayNotificationInChat("Your version is up to date.", ChatBufferTextStyle.StatusBlue);
                 }
             }
 
@@ -1309,9 +1296,9 @@ namespace Radegast
 
         private void ToggleHidden(string tabName)
         {
-            if (!tabsConsole.TabExists(tabName)) return;
+            if (!TabConsole.TabExists(tabName)) return;
 
-            RadegastTab tab = tabsConsole.Tabs[tabName];
+            RadegastTab tab = TabConsole.Tabs[tabName];
 
             if (tab.Hidden)
             {
@@ -1357,13 +1344,13 @@ namespace Radegast
 
         private void tbtnMedia_Click(object sender, EventArgs e)
         {
-            if (tabsConsole.TabExists("media"))
+            if (TabConsole.TabExists("media"))
             {
                 ToggleHidden("media");
             }
             else
             {
-                RadegastTab tab = tabsConsole.AddTab("media", "Media", mediaConsole);
+                RadegastTab tab = TabConsole.AddTab("media", "Media", MediaConsole);
                 tab.AllowClose = false;
                 tab.AllowHide = true;
                 tab.Select();
@@ -1372,13 +1359,13 @@ namespace Radegast
 
         private void debugConsoleToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (tabsConsole.TabExists("debug"))
+            if (TabConsole.TabExists("debug"))
             {
                 ToggleHidden("debug");
             }
             else
             {
-                RadegastTab tab = tabsConsole.AddTab("debug", "Debug", new DebugConsole(instance));
+                RadegastTab tab = TabConsole.AddTab("debug", "Debug", new DebugConsole(instance));
                 tab.AllowClose = false;
                 tab.AllowHide = true;
                 tab.Select();
@@ -1387,9 +1374,9 @@ namespace Radegast
 
         private void tbnObjects_Click(object sender, EventArgs e)
         {
-            if (tabsConsole.TabExists("objects"))
+            if (TabConsole.TabExists("objects"))
             {
-                RadegastTab tab = tabsConsole.Tabs["objects"];
+                RadegastTab tab = TabConsole.Tabs["objects"];
                 if (!tab.Selected)
                 {
                     tab.Select();
@@ -1402,7 +1389,7 @@ namespace Radegast
             }
             else
             {
-                RadegastTab tab = tabsConsole.AddTab("objects", "Objects", new ObjectsConsole(instance));
+                RadegastTab tab = TabConsole.AddTab("objects", "Objects", new ObjectsConsole(instance));
                 tab.AllowClose = true;
                 tab.AllowDetach = true;
                 tab.Visible = true;
@@ -1446,12 +1433,9 @@ namespace Radegast
             {
                 keyboardShortcutsForm = new frmKeyboardShortcuts(instance);
 
-                keyboardShortcutsForm.Disposed += (object senderx, EventArgs ex) =>
+                keyboardShortcutsForm.Disposed += (senderx, ex) =>
                     {
-                        if (components != null)
-                        {
-                            components.Remove(keyboardShortcutsForm);
-                        }
+                        components?.Remove(keyboardShortcutsForm);
                         keyboardShortcutsForm = null;
                     };
 
@@ -1459,10 +1443,7 @@ namespace Radegast
                 keyboardShortcutsForm.Top = Top + 100;
                 keyboardShortcutsForm.Left = Left + 100;
 
-                if (components != null)
-                {
-                    components.Add(keyboardShortcutsForm);
-                }
+                components?.Add(keyboardShortcutsForm);
             }
         }
 
@@ -1473,10 +1454,10 @@ namespace Radegast
 
         private void reloadInventoryToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (tabsConsole.TabExists("inventory"))
+            if (TabConsole.TabExists("inventory"))
             {
-                ((InventoryConsole)tabsConsole.Tabs["inventory"].Control).ReloadInventory();
-                tabsConsole.Tabs["inventory"].Select();
+                ((InventoryConsole)TabConsole.Tabs["inventory"].Control).ReloadInventory();
+                TabConsole.Tabs["inventory"].Select();
             }
         }
 
@@ -1534,15 +1515,15 @@ namespace Radegast
 
         public void DisplayRegionParcelConsole()
         {
-            if (tabsConsole.TabExists("current region info"))
+            if (TabConsole.TabExists("current region info"))
             {
-                tabsConsole.Tabs["current region info"].Select();
-                (tabsConsole.Tabs["current region info"].Control as RegionInfo).UpdateDisplay();
+                TabConsole.Tabs["current region info"].Select();
+                (TabConsole.Tabs["current region info"].Control as RegionInfo).UpdateDisplay();
             }
             else
             {
-                tabsConsole.AddTab("current region info", "Region info", new RegionInfo(instance));
-                tabsConsole.Tabs["current region info"].Select();
+                TabConsole.AddTab("current region info", "Region info", new RegionInfo(instance));
+                TabConsole.Tabs["current region info"].Select();
             }
         }
 
@@ -1555,11 +1536,11 @@ namespace Radegast
                 return;
             }
 
-            if (tabsConsole.TabExists("export console"))
+            if (TabConsole.TabExists("export console"))
             {
-                tabsConsole.Tabs["export console"].Close();
+                TabConsole.Tabs["export console"].Close();
             }
-            RadegastTab tab = tabsConsole.AddTab("export console", "Export Object", new ExportConsole(client, localID));
+            RadegastTab tab = TabConsole.AddTab("export console", "Export Object", new ExportConsole(client, localID));
             tab.Select();
         }
 
@@ -1571,7 +1552,7 @@ namespace Radegast
             }
             else
             {
-                RadegastTab tab = tabsConsole.AddTab("import console", "Import Object", new ImportConsole(client));
+                RadegastTab tab = TabConsole.AddTab("import console", "Import Object", new ImportConsole(client));
                 tab.AllowClose = false;
                 tab.AllowHide = true;
                 tab.Select();
@@ -1587,11 +1568,11 @@ namespace Radegast
                 return;
             }
 
-            if (tabsConsole.TabExists("collada console"))
+            if (TabConsole.TabExists("collada console"))
             {
-                tabsConsole.Tabs["collada console"].Close();
+                TabConsole.Tabs["collada console"].Close();
             }
-            RadegastTab tab = tabsConsole.AddTab("collada console", "Export Collada", new ExportCollada(instance, prim));
+            RadegastTab tab = TabConsole.AddTab("collada console", "Export Collada", new ExportCollada(instance, prim));
             tab.Select();
         }
 
@@ -1610,7 +1591,7 @@ namespace Radegast
         {
             if (!client.Avatars.DisplayNamesAvailable())
             {
-                tabsConsole.DisplayNotificationInChat("This grid does not support display names.", ChatBufferTextStyle.Error);
+                TabConsole.DisplayNotificationInChat("This grid does not support display names.", ChatBufferTextStyle.Error);
                 return;
             }
 
@@ -1620,38 +1601,38 @@ namespace Radegast
 
         private void muteListToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!tabsConsole.TabExists("mute list console"))
+            if (!TabConsole.TabExists("mute list console"))
             {
-                tabsConsole.AddTab("mute list console", "Mute list", new MuteList(instance));
+                TabConsole.AddTab("mute list console", "Mute list", new MuteList(instance));
             }
-            tabsConsole.Tabs["mute list console"].Select();
+            TabConsole.Tabs["mute list console"].Select();
         }
 
         private void uploadImageToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!tabsConsole.TabExists("image upload console"))
+            if (!TabConsole.TabExists("image upload console"))
             {
-                tabsConsole.AddTab("image upload console", "Upload image", new ImageUploadConsole(instance));
+                TabConsole.AddTab("image upload console", "Upload image", new ImageUploadConsole(instance));
             }
-            tabsConsole.Tabs["image upload console"].Select();
+            TabConsole.Tabs["image upload console"].Select();
         }
         #endregion
 
         private void myAttachmentsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Avatar av = client.Network.CurrentSim.ObjectsAvatars.Find((Avatar a) => { return a.ID == client.Self.AgentID; });
+            Avatar av = client.Network.CurrentSim.ObjectsAvatars.Find(a => { return a.ID == client.Self.AgentID; });
 
             if (av == null)
             {
-                tabsConsole.DisplayNotificationInChat("Unable to find my avatar!", ChatBufferTextStyle.Error);
+                TabConsole.DisplayNotificationInChat("Unable to find my avatar!", ChatBufferTextStyle.Error);
                 return;
             }
 
-            if (!instance.TabConsole.TabExists("AT: " + av.ID.ToString()))
+            if (!instance.TabConsole.TabExists("AT: " + av.ID))
             {
-                instance.TabConsole.AddTab("AT: " + av.ID.ToString(), "My Attachments", new AttachmentTab(instance, av));
+                instance.TabConsole.AddTab("AT: " + av.ID, "My Attachments", new AttachmentTab(instance, av));
             }
-            instance.TabConsole.SelectTab("AT: " + av.ID.ToString());
+            instance.TabConsole.SelectTab("AT: " + av.ID);
 
         }
 
@@ -1675,11 +1656,11 @@ namespace Radegast
             {
                 if (res.Success)
                 {
-                    tabsConsole.DisplayNotificationInChat("Successfully changed maturity access level to " + res.NewLevel);
+                    TabConsole.DisplayNotificationInChat("Successfully changed maturity access level to " + res.NewLevel);
                 }
                 else
                 {
-                    tabsConsole.DisplayNotificationInChat("Failed to change maturity access level.", ChatBufferTextStyle.Error);
+                    TabConsole.DisplayNotificationInChat("Failed to change maturity access level.", ChatBufferTextStyle.Error);
                 }
             });
         }
@@ -1701,12 +1682,49 @@ namespace Radegast
 
         private void uploadmeshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!tabsConsole.TabExists("mesh upload console"))
+            if (!TabConsole.TabExists("mesh upload console"))
             {
-                tabsConsole.AddTab("mesh upload console", "Upload mesh", new MeshUploadConsole(instance));
+                TabConsole.AddTab("mesh upload console", "Upload mesh", new MeshUploadConsole(instance));
             }
-            tabsConsole.Tabs["mesh upload console"].Select();
+            TabConsole.Tabs["mesh upload console"].Select();
         }
 
+        private void setHoverHeightToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var hoverHeight = 0.0;
+            if (instance.GlobalSettings.ContainsKey("AvatarHoverOffsetZ"))
+            {
+                hoverHeight = instance.GlobalSettings["AvatarHoverOffsetZ"];
+            }
+
+            var hoverHeightControl = new frmHoverHeight(hoverHeight, Instance.MonoRuntime);
+            hoverHeightControl.HoverHeightChanged += HoverHeightControl_HoverHeightChanged;
+            hoverHeightControl.Show();
+        }
+
+        private void HoverHeightControl_HoverHeightChanged(object sender, HoverHeightChangedEventArgs e)
+        {
+            instance.GlobalSettings["AvatarHoverOffsetZ"] = e.HoverHeight;
+            Client.Self.SetHoverHeight(e.HoverHeight);
+        }
+
+        private void Caps_CapabilitiesReceived(object sender, CapabilitiesReceivedEventArgs e)
+        {
+            e.Simulator.Caps.CapabilitiesReceived -= Caps_CapabilitiesReceived;
+
+            if (e.Simulator == client.Network.CurrentSim)
+            {
+                SetHoverHeightFromSettings();
+            }
+        }
+
+        private void SetHoverHeightFromSettings()
+        {
+            if (instance.GlobalSettings.ContainsKey("AvatarHoverOffsetZ"))
+            {
+                var hoverHeight = instance.GlobalSettings["AvatarHoverOffsetZ"];
+                Client.Self.SetHoverHeight(hoverHeight);
+            }
+        }
     }
 }

@@ -30,12 +30,7 @@
 //
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Data;
 using System.Linq;
-using System.Text;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
@@ -46,9 +41,6 @@ using System.Threading;
 using System.Windows.Forms;
 using System.IO;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenMetaverse.Assets;
-using OpenMetaverse.Imaging;
 
 namespace Radegast
 {
@@ -70,7 +62,7 @@ namespace Radegast
 			GatherInfo();
 			Exporter = new PrimExporter(client);
 
-			Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+			GUI.GuiHelpers.ApplyGuiFixes(this);
 		}
 		#endregion
 		
@@ -90,11 +82,10 @@ namespace Radegast
 		
 		void GatherInfo()
 		{
-			Primitive exportPrim;
-			uint localid;
+		    uint localid;
 			
-			exportPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(
-				delegate(Primitive prim) { return prim.LocalID == uLocalID; }
+			var exportPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(
+			    prim => prim.LocalID == uLocalID
 			);
 			
 			if (exportPrim != null)
@@ -111,49 +102,43 @@ namespace Radegast
 					}
 				);
 				
-				for (int i = 0; i < prims.Count; i++)
+				foreach (Primitive prim in prims)
 				{
-					Primitive prim = prims[i];
-					UUID texture;
-					
-					if (prim.Textures.DefaultTexture.TextureID != Primitive.TextureEntry.WHITE_TEXTURE &&
-					    !Textures.Contains(prim.Textures.DefaultTexture.TextureID))
-					{
-						texture = new UUID(prim.Textures.DefaultTexture.TextureID);
-						Textures.Add(texture);
+				    if (prim.Textures.DefaultTexture.TextureID != Primitive.TextureEntry.WHITE_TEXTURE &&
+				        !Textures.Contains(prim.Textures.DefaultTexture.TextureID))
+				    {
+				        var texture = new UUID(prim.Textures.DefaultTexture.TextureID);
+				        Textures.Add(texture);
 						
-						for (int j = 0; j < prim.Textures.FaceTextures.Length; j++)
-						{
-							if (prim.Textures.FaceTextures[j] != null &&
-							    prim.Textures.FaceTextures[j].TextureID != Primitive.TextureEntry.WHITE_TEXTURE &&
-							    !Textures.Contains(prim.Textures.FaceTextures[j].TextureID))
-							{
-								texture = new UUID(prim.Textures.FaceTextures[j].TextureID);
-								Textures.Add(texture);
-							}
-						}
+				        foreach (Primitive.TextureEntryFace face in prim.Textures.FaceTextures)
+				        {
+				            if (face != null &&
+				                face.TextureID != Primitive.TextureEntry.WHITE_TEXTURE &&
+				                !Textures.Contains(face.TextureID))
+				            {
+				                texture = new UUID(face.TextureID);
+				                Textures.Add(texture);
+				            }
+				        }
 						
-						if (prim.Sculpt != null && prim.Sculpt.SculptTexture != UUID.Zero && !Textures.Contains(prim.Sculpt.SculptTexture))
-						{
-							texture = new UUID(prim.Sculpt.SculptTexture);
-							Textures.Add(texture);
-						}
-					}
+				        if (prim.Sculpt != null && prim.Sculpt.SculptTexture != UUID.Zero && !Textures.Contains(prim.Sculpt.SculptTexture))
+				        {
+				            texture = new UUID(prim.Sculpt.SculptTexture);
+				            Textures.Add(texture);
+				        }
+				    }
 				}
 				objectName.Text = exportPrim.Properties.Name;
 				objectUUID.Text = exportPrim.ID.ToString();
 				primCount.Text = prims.Count.ToString();
-				textureCount.Text = Textures.Count().ToString();
+				textureCount.Text = Textures.Count.ToString();
 			}
 		}
 		
 		void ValidatePath(string fname)
 		{
-			string path = Path.GetDirectoryName(fname);
-			if (Directory.Exists(path))
-				btnExport.Enabled = true;
-			else
-				btnExport.Enabled = false;
+		    string path = Path.GetDirectoryName(fname);
+		    btnExport.Enabled = Directory.Exists(path);
 		}
 		#endregion
 		
@@ -179,10 +164,10 @@ namespace Radegast
 		
 		void BtnExportClick(object sender, EventArgs e)
 		{
-			this.Enabled = false;
+			Enabled = false;
 			Exporter.LogMessage = LogMessage;
 			
-			Thread t = new Thread(new System.Threading.ThreadStart(delegate()
+			Thread t = new Thread(new ThreadStart(delegate()
 			{
 				try
 				{
@@ -190,7 +175,7 @@ namespace Radegast
 					LogMessage("Export Successful.");
 					if (InvokeRequired)
 					{
-						BeginInvoke(new MethodInvoker(() => this.Enabled = true));
+						BeginInvoke(new MethodInvoker(() => Enabled = true));
 					}
 				}
 				catch (Exception ex)

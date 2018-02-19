@@ -1,19 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using System.Threading;
 using OpenMetaverse;
 
 namespace Radegast
 {
     public partial class RegionInfo : RadegastTabControl
     {
-        System.Windows.Forms.Timer refresh;
+        Timer refresh;
         UUID parcelGroupID = UUID.Zero;
 
         public RegionInfo()
@@ -27,7 +20,7 @@ namespace Radegast
             InitializeComponent();
             Disposed += new EventHandler(RegionInfo_Disposed);
 
-            refresh = new System.Windows.Forms.Timer()
+            refresh = new Timer()
             {
                 Enabled = false,
                 Interval = 1000,
@@ -41,7 +34,7 @@ namespace Radegast
             UpdateDisplay();
             client.Parcels.RequestDwell(client.Network.CurrentSim, instance.State.Parcel.LocalID);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void RegionInfo_Disposed(object sender, EventArgs e)
@@ -136,7 +129,7 @@ namespace Radegast
             lblSpareTime.Text = string.Format("{0:0.0} ms", Math.Max(0f, 1000f / 45f - total));
 
             lblCPUClass.Text = client.Network.CurrentSim.CPUClass.ToString();
-            lblDataCenter.Text = client.Network.CurrentSim.ColoLocation.ToString();
+            lblDataCenter.Text = client.Network.CurrentSim.ColoLocation;
             lblVersion.Text = client.Network.CurrentSim.SimVersion;
         }
 
@@ -145,7 +138,7 @@ namespace Radegast
             Parcel p = instance.State.Parcel;
             txtParcelTitle.Text = p.Name;
             txtParcelDescription.Text = p.Desc;
-            lblSimType.Text = client.Network.CurrentSim.ProductName.ToString();
+            lblSimType.Text = client.Network.CurrentSim.ProductName;
 
             pnlParcelImage.Controls.Clear();
 

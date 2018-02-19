@@ -33,11 +33,7 @@
 #define SHAREDFMOD
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
-using OpenMetaverse;
 using System.Threading;
 using Radegast.Media;
 
@@ -45,21 +41,20 @@ namespace RadegastSpeech.Sound
 {
     class FmodSound : Control
     {
-        Radegast.Media.Speech speechPlayer;
+        Speech speechPlayer;
         private AutoResetEvent playing;
 
         internal FmodSound(PluginControl pc)
             : base(pc)
         {
             playing = new AutoResetEvent(false);
-            speechPlayer = new Radegast.Media.Speech();
+            speechPlayer = new Speech();
             speechPlayer.OnSpeechDone += new Speech.SpeechDoneCallback(SpeechDoneHandler);
         }
 
         internal override void Stop()
         {
-            if (speechPlayer == null) return;
-            speechPlayer.Stop();
+            speechPlayer?.Stop();
         }
 
         /// <summary>

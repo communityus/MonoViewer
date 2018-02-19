@@ -174,8 +174,8 @@ namespace Radegast
         public ExtendedRichTextBox()
         {
 
-            this.myToolTip = new ToolTip();
-            this.ContextMenu = new ContextMenu();
+            myToolTip = new ToolTip();
+            ContextMenu = new ContextMenu();
 
             // Initialize default text and background colors
             textColor = RtfColor.Black;
@@ -210,7 +210,7 @@ namespace Radegast
 
             // Get the horizontal and vertical resolutions at which the object is
             // being displayed
-            using (Graphics _graphics = this.CreateGraphics())
+            using (Graphics _graphics = CreateGraphics())
             {
                 xDpi = _graphics.DpiX;
                 yDpi = _graphics.DpiY;
@@ -341,6 +341,7 @@ namespace Radegast
         /// </summary>
         /// <param name="hWnd">the window to send the message to</param>
         /// <param name="nBar">the number of the sroll bar to look at</param>
+        /// <param name="info"></param>
         /// <returns></returns>
         [DllImport("user32", CharSet = CharSet.Auto)]
         private static extern int GetScrollInfo(HandleRef hWnd, int nBar, ref SCROLLINFO info);
@@ -653,10 +654,7 @@ namespace Radegast
         /// <summary>
         /// Returns if updates to the controls are under way with BeginUpdate
         /// </summary>
-        public bool Updating
-        {
-            get { return _Updating > 0; }
-        }
+        public bool Updating => _Updating > 0;
 
         #endregion
         #region ScrollBarDetails
@@ -780,11 +778,11 @@ namespace Radegast
         {
 
             // Move caret to the end of the text
-            this.Select(this.TextLength, 0);
+            Select(TextLength, 0);
 
             // Since SelectedRtf is null, this will append the string to the
             // end of the existing RTF
-            this.SelectedRtf = _rtf;
+            SelectedRtf = _rtf;
         }
 
         /// <summary>
@@ -798,7 +796,7 @@ namespace Radegast
         /// <param name="_rtf"></param>
         public void InsertRtf(string _rtf)
         {
-            this.SelectedRtf = _rtf;
+            SelectedRtf = _rtf;
         }
 
         /// <summary>
@@ -807,7 +805,7 @@ namespace Radegast
         /// <param name="_text"></param>
         public void AppendTextAsRtf(string _text)
         {
-            AppendTextAsRtf(_text, this.Font);
+            AppendTextAsRtf(_text, Font);
         }
 
         /// <summary>
@@ -827,7 +825,7 @@ namespace Radegast
         /// </summary>
         /// <param name="_text"></param>
         /// <param name="_font"></param>
-        /// <param name="_color"></param>
+        /// <param name="_textColor"></param>
         public void AppendTextAsRtf(string _text, Font _font, RtfColor _textColor)
         {
             AppendTextAsRtf(_text, _font, _textColor, highlightColor);
@@ -845,7 +843,7 @@ namespace Radegast
         public void AppendTextAsRtf(string _text, Font _font, RtfColor _textColor, RtfColor _backColor)
         {
             // Move carret to the end of the text
-            this.Select(this.TextLength, 0);
+            Select(TextLength, 0);
 
             InsertTextAsRtf(_text, _font, _textColor, _backColor);
         }
@@ -859,7 +857,7 @@ namespace Radegast
         /// <param name="_text"></param>
         public void InsertTextAsRtf(string _text)
         {
-            InsertTextAsRtf(_text, this.Font);
+            InsertTextAsRtf(_text, Font);
         }
 
 
@@ -880,7 +878,7 @@ namespace Radegast
         /// </summary>
         /// <param name="_text"></param>
         /// <param name="_font"></param>
-        /// <param name="_color"></param>
+        /// <param name="_textColor"></param>
         public void InsertTextAsRtf(string _text, Font _font, RtfColor _textColor)
         {
             InsertTextAsRtf(_text, _font, _textColor, highlightColor);
@@ -902,8 +900,8 @@ namespace Radegast
         /// </remarks>
         /// <param name="_text"></param>
         /// <param name="_font"></param>
-        /// <param name="_color"></param>
-        /// <param name="_color"></param>
+        /// <param name="_textColor"></param>
+        /// <param name="_backColor"></param>
         public void InsertTextAsRtf(string _text, Font _font, RtfColor _textColor, RtfColor _backColor)
         {
 
@@ -924,7 +922,7 @@ namespace Radegast
             // it to the RTF string.
             _rtf.Append(GetDocumentArea(_text, _font));
 
-            this.SelectedRtf = _rtf.ToString();
+            SelectedRtf = _rtf.ToString();
         }
 
         /// <summary>
@@ -1048,7 +1046,7 @@ namespace Radegast
 
             // Create the font table using the RichTextBox's current font and append
             // it to the RTF string
-            _rtf.Append(GetFontTable(this.Font));
+            _rtf.Append(GetFontTable(Font));
 
             // Create the image control string and append it to the RTF string
             _rtf.Append(GetImagePrefix(_image));
@@ -1059,7 +1057,7 @@ namespace Radegast
             // Close the RTF image control string
             _rtf.Append(RTF_IMAGE_POST);
 
-            this.SelectedRtf = _rtf.ToString();
+            SelectedRtf = _rtf.ToString();
         }
 
         /// <summary>
@@ -1206,7 +1204,7 @@ namespace Radegast
                 _stream = new MemoryStream();
 
                 // Get a graphics context from the RichTextBox
-                using (_graphics = this.CreateGraphics())
+                using (_graphics = CreateGraphics())
                 {
 
                     // Get the device context from the graphics context
@@ -1255,12 +1253,9 @@ namespace Radegast
             }
             finally
             {
-                if (_graphics != null)
-                    _graphics.Dispose();
-                if (_metaFile != null)
-                    _metaFile.Dispose();
-                if (_stream != null)
-                    _stream.Close();
+                _graphics?.Dispose();
+                _metaFile?.Dispose();
+                _stream?.Close();
             }
         }
 
@@ -1489,12 +1484,6 @@ namespace Radegast
     /// </summary>
     public class ScrollBarInformation
     {
-        int nMin = 0;
-        int nMax = 0;
-        int nPage = 0;
-        int nPos = 0;
-        int nTrackPos = 0;
-
         /// <summary>
         /// Sets up an empty scroll bar information class.
         /// </summary>
@@ -1513,53 +1502,37 @@ namespace Radegast
         /// <param name="trackpos">this is updated while the scroll bar is wiggling up and down.</param>
         public ScrollBarInformation(int min, int max, int page, int pos, int trackpos)
         {
-            this.nMin = min;
-            this.nMax = max;
-            this.nPage = page;
-            this.nPos = pos;
-            this.nTrackPos = trackpos;
+            Minimum = min;
+            Maximum = max;
+            Page = page;
+            Position = pos;
+            TrackPosition = trackpos;
         }
 
         /// <summary>
         /// Specifies the minimum scrolling position.
         /// </summary>
         /// <value>the minimum scrolling position</value>
-        public int Minimum
-        {
-            get { return nMin; }
-            set { nMin = value; }
-        }
+        public int Minimum { get; set; } = 0;
 
         /// <summary>
         /// Specifies the maximum scrolling position.
         /// </summary>
         /// <value>the maximum scrolling position</value>
-        public int Maximum
-        {
-            get { return nMax; }
-            set { nMax = value; }
-        }
+        public int Maximum { get; set; } = 0;
 
         /// <summary>
         /// Specifies the page size. A scroll bar uses this value to determine the
         /// appropriate size of the proportional scroll box.
         /// </summary>
         /// <value></value>
-        public int Page
-        {
-            get { return nPage; }
-            set { nPage = value; }
-        }
+        public int Page { get; set; } = 0;
 
         /// <summary>
         /// The position of the thumb inside the scroll bar.
         /// </summary>
         /// <value></value>
-        public int Position
-        {
-            get { return nPos; }
-            set { nPos = value; }
-        }
+        public int Position { get; set; } = 0;
 
         /// <summary>
         /// Specifies the immediate position of a scroll box that the user is dragging.
@@ -1568,11 +1541,7 @@ namespace Radegast
         /// SetScrollInfo function ignores this member.
         /// </summary>
         /// <value>the immediated position of the scroll box</value>
-        public int TrackPosition
-        {
-            get { return nTrackPos; }
-            set { nTrackPos = value; }
-        }
+        public int TrackPosition { get; set; } = 0;
     }
     #endregion
 }

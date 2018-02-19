@@ -28,9 +28,8 @@
 //
 // $Id$
 //
+
 using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Text;
 using OpenMetaverse;
 
@@ -48,11 +47,6 @@ namespace Radegast.Commands
             Usage = Name;
 
             this.instance = instance;
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
         }
 
         public override void Execute(string name, string[] cmdArgs, ConsoleWriteLine WriteLine)

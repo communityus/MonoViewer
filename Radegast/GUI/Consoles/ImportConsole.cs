@@ -30,12 +30,7 @@
 //
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Data;
 using System.Linq;
-using System.Text;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
@@ -47,8 +42,6 @@ using System.Windows.Forms;
 using System.IO;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenMetaverse.Assets;
-using OpenMetaverse.Imaging;
 
 namespace Radegast
 {
@@ -74,7 +67,7 @@ namespace Radegast
 			primCount.Text = "";
 			textureCount.Text = "";
 
-			Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+			GUI.GuiHelpers.ApplyGuiFixes(this);
 		}
 		#endregion
 		
@@ -101,7 +94,7 @@ namespace Radegast
 				LogMessage("Loading {0}...",fileName);
 				string xml = File.ReadAllText(fileName);
 				List<Primitive> prims = Helpers.OSDToPrimList(OSDParser.DeserializeLLSDXml(xml));
-				int count = prims.Count();
+				int count = prims.Count;
 				string name = "";
 				string desc = "";
 				Importer.Textures = new Dictionary<UUID, UUID>();
@@ -135,7 +128,7 @@ namespace Radegast
 				}
 				objectName.Text = name;
 				primCount.Text = prims.Count.ToString();
-				textureCount.Text = Importer.Textures.Count().ToString();
+				textureCount.Text = Importer.Textures.Count.ToString();
 				LogMessage("Reading complete, Ready to import...");
 			}
 		}
@@ -174,7 +167,7 @@ namespace Radegast
 			{
 				if (texture == UUID.Zero)
 					continue;
-				string file = Path.Combine(path,texture.ToString() + ".jp2");
+				string file = Path.Combine(path,texture + ".jp2");
 				if (!File.Exists(file))
 				{
 					LogMessage("Failed to find texture {0}",texture.ToString());
@@ -213,7 +206,7 @@ namespace Radegast
 			
 			foreach(UUID texture in textures)
 			{
-				string file = Path.Combine(path,texture.ToString() + ".jp2");
+				string file = Path.Combine(path,texture + ".jp2");
 				LogMessage("Uploading texture {0}...",texture.ToString());
 				bool ret = upldr.UploadImage(file,"Import of " + Path.GetFileNameWithoutExtension(txtFileName.Text),uploaddir);
 				if (ret)
@@ -235,7 +228,7 @@ namespace Radegast
 		
 		void EnableWindow()
 		{
-			this.Enabled = true;
+			Enabled = true;
 		}
 		#endregion
 		
@@ -249,12 +242,17 @@ namespace Radegast
 		
 		void BtnBrowseClick(object sender, EventArgs e)
 		{
-			WindowWrapper mainWindow = new WindowWrapper(frmMain.ActiveForm.Handle);
-			System.Windows.Forms.OpenFileDialog dlg = new OpenFileDialog();
-			dlg.Title = "Open object file";
-			dlg.Filter = "XML file (*.xml)|*.xml";
-			dlg.Multiselect = false;
-			DialogResult res = dlg.ShowDialog();
+		    if (Form.ActiveForm != null)
+		    {
+		        WindowWrapper mainWindow = new WindowWrapper(Form.ActiveForm.Handle);
+		    }
+		    OpenFileDialog dlg = new OpenFileDialog
+		    {
+		        Title = "Open object file",
+		        Filter = "XML file (*.xml)|*.xml",
+		        Multiselect = false
+		    };
+		    DialogResult res = dlg.ShowDialog();
 			
 			if (res != DialogResult.OK)
 				return;
@@ -273,11 +271,11 @@ namespace Radegast
 		
 		void BtnUploadClick(object sender, EventArgs e)
 		{
-			this.Enabled = false;
+			Enabled = false;
 			if (cmbImageOptions.SelectedIndex == -1)
 			{
 				MessageBox.Show("You must select an Image Option before you can import an object.","Import Object Error",MessageBoxButtons.OK,MessageBoxIcon.Error);
-				this.Enabled = true;
+				Enabled = true;
 				return;
 			}
 			switch(cmbImageOptions.SelectedIndex)
@@ -303,19 +301,19 @@ namespace Radegast
 				if (!float.TryParse(txtX.Text,out x))
 				{
 					MessageBox.Show("X Coordinate needs to be a Float position!  Example: 1.500","Import Object Error",MessageBoxButtons.OK,MessageBoxIcon.Error);
-					this.Enabled = true;
+					Enabled = true;
 					return;
 				}
 				if (!float.TryParse(txtY.Text,out y))
 				{
 					MessageBox.Show("Y Coordinate needs to be a Float position!  Example: 1.500","Import Object Error",MessageBoxButtons.OK,MessageBoxIcon.Error);
-					this.Enabled = true;
+					Enabled = true;
 					return;
 				}
 				if (!float.TryParse(txtZ.Text,out z))
 				{
 					MessageBox.Show("Z Coordinate needs to be a Float position!  Example: 1.500","Import Object Error",MessageBoxButtons.OK,MessageBoxIcon.Error);
-					this.Enabled = true;
+					Enabled = true;
 					return;
 				}
 				Importer.RezAt = new Vector3(x,y,z);
@@ -326,7 +324,7 @@ namespace Radegast
 				Importer.RezAt.Z += 3.5f;
 			}
 			
-			Thread t = new Thread(new System.Threading.ThreadStart(delegate()
+			Thread t = new Thread(new ThreadStart(delegate()
 			{
 				try
 				{

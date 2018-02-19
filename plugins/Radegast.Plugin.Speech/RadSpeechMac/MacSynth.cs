@@ -1,16 +1,11 @@
 ﻿// Define CARBON to use the lower level interface
 //#define CARBON
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using RadegastSpeech.Talk;
-using Radegast;
-using Monobjc;
 using Monobjc.Cocoa;
-using System.Runtime.InteropServices;
 using OpenMetaverse.StructuredData;
 
 namespace RadegastSpeech
@@ -103,22 +98,19 @@ namespace RadegastSpeech
                 bool skip = false;
 
                 // Check for additional information about this voice
-                if (voiceProperties != null)
+                string propString = voiceProperties?[name].AsString();
+                if (propString != null)
                 {
-                    string propString = voiceProperties[name].AsString();
-                    if (propString != null)
-                    {
-                        // Properties are a series of blank-separated keywords
-                        string[] props = propString.Split(' ');
+                    // Properties are a series of blank-separated keywords
+                    string[] props = propString.Split(' ');
 
-                        foreach (string key in props)
+                    foreach (string key in props)
+                    {
+                        switch (key)
                         {
-                            switch (key)
-                            {
-                                case "ignore":
-                                    skip = true;
-                                    break;
-                            }
+                            case "ignore":
+                                skip = true;
+                                break;
                         }
                     }
                 }

@@ -42,9 +42,6 @@ namespace Radegast
         private RadegastNetcom netcom;
         private GridClient client;
 
-        private UUID queryID;
-        private Dictionary<string, UUID> findPeopleResults;
-
         public event EventHandler SelectedIndexChanged;
 
         public FindPeopleConsole(RadegastInstance instance, UUID queryID)
@@ -52,8 +49,8 @@ namespace Radegast
             InitializeComponent();
             Disposed += new EventHandler(FindPeopleConsole_Disposed);
 
-            findPeopleResults = new Dictionary<string, UUID>();
-            this.queryID = queryID;
+            LLUUIDs = new Dictionary<string, UUID>();
+            QueryID = queryID;
 
             this.instance = instance;
             netcom = this.instance.Netcom;
@@ -62,7 +59,7 @@ namespace Radegast
             // Callbacks
             client.Directory.DirPeopleReply += new EventHandler<DirPeopleReplyEventArgs>(Directory_DirPeopleReply);
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void FindPeopleConsole_Disposed(object sender, EventArgs e)
@@ -72,7 +69,7 @@ namespace Radegast
 
         void Directory_DirPeopleReply(object sender, DirPeopleReplyEventArgs e)
         {
-            if (e.QueryID != this.queryID) return;
+            if (e.QueryID != QueryID) return;
 
             if (InvokeRequired)
             {
@@ -85,7 +82,7 @@ namespace Radegast
             foreach (DirectoryManager.AgentSearchData person in e.MatchedPeople)
             {
                 string fullName = person.FirstName + " " + person.LastName;
-                findPeopleResults.Add(fullName, person.AgentID);
+                LLUUIDs.Add(fullName, person.AgentID);
 
                 ListViewItem item = lvwFindPeople.Items.Add(fullName);
                 item.SubItems.Add(person.Online ? "Yes" : "No");
@@ -97,7 +94,7 @@ namespace Radegast
 
         public void ClearResults()
         {
-            findPeopleResults.Clear();
+            LLUUIDs.Clear();
             lvwFindPeople.Items.Clear();
         }
 
@@ -108,57 +105,41 @@ namespace Radegast
 
         protected virtual void OnSelectedIndexChanged(EventArgs e)
         {
-            if (SelectedIndexChanged != null) SelectedIndexChanged(this, e);
+            SelectedIndexChanged?.Invoke(this, e);
         }
 
-        public Dictionary<string, UUID> LLUUIDs
-        {
-            get { return findPeopleResults; }
-        }
+        public Dictionary<string, UUID> LLUUIDs { get; }
 
-        public UUID QueryID
-        {
-            get { return queryID; }
-            set { queryID = value; }
-        }
+        public UUID QueryID { get; set; }
 
         public int SelectedIndex
         {
             get
             {
-                if (lvwFindPeople.SelectedItems == null) return -1;
                 if (lvwFindPeople.SelectedItems.Count == 0) return -1;
 
                 return lvwFindPeople.SelectedIndices[0];
             }
         }
 
-        public string SelectedName
-        {
-            get
-            {
-                if (lvwFindPeople.SelectedItems == null) return string.Empty;
-                if (lvwFindPeople.SelectedItems.Count == 0) return string.Empty;
-
-                return lvwFindPeople.SelectedItems[0].Text;
-            }
-        }
+        public string SelectedName => lvwFindPeople.SelectedItems.Count == 0 ? string.Empty : lvwFindPeople.SelectedItems[0].Text;
 
         public bool SelectedOnlineStatus
         {
             get
             {
-                if (lvwFindPeople.SelectedItems == null) return false;
                 if (lvwFindPeople.SelectedItems.Count == 0) return false;
 
                 string yesNo = lvwFindPeople.SelectedItems[0].SubItems[0].Text;
 
-                if (yesNo == "Yes")
-                    return true;
-                else if (yesNo == "No")
-                    return false;
-                else
-                    return false;
+                switch (yesNo)
+                {
+                    case "Yes":
+                        return true;
+                    case "No":
+                    default:
+                        return false;
+                }
             }
         }
 
@@ -166,11 +147,10 @@ namespace Radegast
         {
             get
             {
-                if (lvwFindPeople.SelectedItems == null) return UUID.Zero;
                 if (lvwFindPeople.SelectedItems.Count == 0) return UUID.Zero;
 
                 string name = lvwFindPeople.SelectedItems[0].Text;
-                return findPeopleResults[name];
+                return LLUUIDs[name];
             }
         }
     }

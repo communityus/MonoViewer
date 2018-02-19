@@ -39,7 +39,7 @@ namespace Radegast
     public partial class Notecard : DettachableControl
     {
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
+        private GridClient client => instance.Client;
         private InventoryNotecard notecard;
         private AssetNotecard receivedNotecard;
         private Primitive prim;
@@ -82,7 +82,7 @@ namespace Radegast
                 }
             }
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void Notecard_Disposed(object sender, EventArgs e)
@@ -146,12 +146,12 @@ namespace Radegast
                             titem.DisplayStyle = ToolStripItemDisplayStyle.Text;
                         }
 
-                        titem.Name = item.UUID.ToString(); ;
+                        titem.Name = item.UUID.ToString();
                         titem.Tag = item;
                         titem.Click += new EventHandler(attachmentMenuItem_Click);
 
                         var saveToInv = new ToolStripMenuItem("Save to inventory");
-                        saveToInv.Click += (object xsender, EventArgs xe) =>
+                        saveToInv.Click += (xsender, xe) =>
                             {
                                 client.Inventory.RequestCopyItemFromNotecard(UUID.Zero,
                                     notecard.UUID,

@@ -138,7 +138,7 @@ namespace Radegast
         /// </summary>
         public InventoryClipboard InventoryClipboard
         {
-            get { return inventoryClipboard; }
+            get => inventoryClipboard;
             set
             {
                 inventoryClipboard = value;
@@ -555,7 +555,7 @@ namespace Radegast
 
         public string ChatFileName(string session)
         {
-            string fileName = System.IO.Path.GetInvalidFileNameChars().Aggregate(session, (current, lDisallowed) => current.Replace(lDisallowed.ToString(), "_"));
+            string fileName = Path.GetInvalidFileNameChars().Aggregate(session, (current, lDisallowed) => current.Replace(lDisallowed.ToString(), "_"));
             return Path.Combine(ClientDir, fileName);
         }
 
@@ -576,14 +576,14 @@ namespace Radegast
 
         void Groups_CurrentGroups(object sender, CurrentGroupsEventArgs e)
         {
-            this.Groups = e.Groups;
+            Groups = e.Groups;
         }
 
         private void InitializeLoggingAndConfig()
         {
             try
             {
-                UserDir = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), Properties.Resources.ProgramName);
+                UserDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Properties.Resources.ProgramName);
                 if (!Directory.Exists(UserDir))
                 {
                     Directory.CreateDirectory(UserDir);
@@ -591,8 +591,8 @@ namespace Radegast
             }
             catch (Exception)
             {
-                UserDir = System.Environment.CurrentDirectory;
-            };
+                UserDir = Environment.CurrentDirectory;
+            }
 
             GlobalLogFile = Path.Combine(UserDir, Properties.Resources.ProgramName + ".log");
             GlobalSettings = new Settings(Path.Combine(UserDir, "settings.xml"));
@@ -623,14 +623,14 @@ namespace Radegast
             if (MarkerLock != null && MarkerLock.CanWrite)
             {
                 Logger.Log("No other instances detected, marker file already locked", Helpers.LogLevel.Debug);
-                return false || MonoRuntime;
+                return MonoRuntime;
             }
 
             try
             {
                 MarkerLock = new FileStream(CrashMarkerFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
                 Logger.Log($"Successfully created and locked marker file {CrashMarkerFileName}", Helpers.LogLevel.Debug);
-                return false || MonoRuntime;
+                return MonoRuntime;
             }
             catch
             {

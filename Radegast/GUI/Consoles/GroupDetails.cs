@@ -37,8 +37,6 @@ using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
 using Monitor = ThreadPoolUtil.Monitor;
 #endif
-using System.Threading;
-using System.Timers;
 using System.Windows.Forms;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -48,10 +46,10 @@ namespace Radegast
     public partial class GroupDetails : UserControl
     {
         private RadegastInstance instance;
-        private GridClient client { get { return instance.Client; } }
+        private GridClient client => instance.Client;
         private Group group;
         private Dictionary<UUID, GroupTitle> titles;
-        private Dictionary<UUID, Group> myGroups { get { return instance.Groups; } }
+        private Dictionary<UUID, Group> myGroups => instance.Groups;
         private List<KeyValuePair<UUID, UUID>> roleMembers;
         private Dictionary<UUID, GroupRole> roles;
         private bool isMember;
@@ -121,7 +119,7 @@ namespace Radegast
             RefreshControlsAvailability();
             RefreshGroupInfo();
 
-            Radegast.GUI.GuiHelpers.ApplyGuiFixes(this);
+            GUI.GuiHelpers.ApplyGuiFixes(this);
         }
 
         void GroupDetails_Disposed(object sender, EventArgs e)
@@ -220,23 +218,15 @@ namespace Radegast
             }
 
             InstantMessage msg = e.IM;
-            AssetType type;
             UUID groupID;
 
-            if (msg.BinaryBucket.Length >= 18)
-            {
-                groupID = new UUID(msg.BinaryBucket, 2);
-            }
-            else
-            {
-                groupID = msg.FromAgentID;
-            }
+            groupID = msg.BinaryBucket.Length >= 18 ? new UUID(msg.BinaryBucket, 2) : msg.FromAgentID;
 
             if (groupID != group.ID) return;
 
             if (msg.BinaryBucket.Length > 18 && msg.BinaryBucket[0] != 0)
             {
-                type = (AssetType)msg.BinaryBucket[1];
+                var type = (AssetType)msg.BinaryBucket[1];
                 destinationFolderID = client.Inventory.FindFolderForType(type);
                 int icoIndx = InventoryConsole.GetItemImageIndex(type.ToString().ToLower());
                 if (icoIndx >= 0)
@@ -250,7 +240,7 @@ namespace Radegast
                 btnSave.Tag = msg;
             }
 
-            string text = msg.Message.Replace("\n", System.Environment.NewLine);
+            string text = msg.Message.Replace("\n", Environment.NewLine);
             int pos = msg.Message.IndexOf('|');
             string title = msg.Message.Substring(0, pos);
             text = text.Remove(0, pos + 1);
@@ -425,7 +415,7 @@ namespace Radegast
                 return;
             }
 
-            this.titles = e.Titles;
+            titles = e.Titles;
 
             foreach (GroupTitle title in titles.Values)
             {
@@ -736,7 +726,7 @@ namespace Radegast
 
         private void btnClose_Click(object sender, EventArgs e)
         {
-            this.FindForm().Close();
+            FindForm().Close();
         }
 
         private void tcGroupDetails_SelectedIndexChanged(object sender, EventArgs e)
@@ -866,7 +856,7 @@ namespace Radegast
                     item.Name = role.Name;
                     item.SubItems.Add(new ListViewItem.ListViewSubItem(item, role.Name));
                     item.Tag = role;
-                    var foundRole = roleMembers.Find((KeyValuePair<UUID, UUID> kvp) => { return kvp.Value == m.Base.ID && kvp.Key == role.ID; });
+                    var foundRole = roleMembers.Find(kvp => { return kvp.Value == m.Base.ID && kvp.Key == role.ID; });
                     bool hasRole = foundRole.Value == m.Base.ID;
                     item.Checked = hasRole;
                     lvwAssignedRoles.Items.Add(item);
@@ -910,7 +900,7 @@ namespace Radegast
                     continue;
 
                 GroupRole role = (GroupRole)item.Tag;
-                var foundRole = roleMembers.Find((KeyValuePair<UUID, UUID> kvp) => { return kvp.Value == m.Base.ID && kvp.Key == role.ID; });
+                var foundRole = roleMembers.Find(kvp => { return kvp.Value == m.Base.ID && kvp.Key == role.ID; });
                 bool hasRole = foundRole.Value == m.Base.ID;
 
                 if (item.Checked != hasRole)
@@ -959,7 +949,7 @@ namespace Radegast
                         continue;
 
                     GroupRole role = (GroupRole)item.Tag;
-                    var foundRole = roleMembers.Find((KeyValuePair<UUID, UUID> kvp) => { return kvp.Value == m.Base.ID && kvp.Key == role.ID; });
+                    var foundRole = roleMembers.Find(kvp => { return kvp.Value == m.Base.ID && kvp.Key == role.ID; });
                     bool hasRole = foundRole.Value == m.Base.ID;
 
                     if (item.Checked != hasRole)
@@ -1047,7 +1037,7 @@ namespace Radegast
             }
             else if (roleMembers != null)
             {
-                var mmb = roleMembers.FindAll((KeyValuePair<UUID, UUID> kvp) => { return kvp.Key == role.ID; });
+                var mmb = roleMembers.FindAll(kvp => { return kvp.Key == role.ID; });
                 foreach (var m in mmb)
                 {
                     lvwAssignedMembers.Items.Add(instance.Names.Get(m.Value));
@@ -1402,23 +1392,11 @@ namespace Radegast
             switch (SortBy)
             {
                 case SortByColumn.Name:
-                    if (CurrentOrder == SortOrder.Ascending)
-                        return string.Compare(member1.Name, member2.Name);
-                    else
-                        return string.Compare(member2.Name, member1.Name);
-
+                    return CurrentOrder == SortOrder.Ascending ? String.CompareOrdinal(member1.Name, member2.Name) : String.CompareOrdinal(member2.Name, member1.Name);
                 case SortByColumn.Title:
-                    if (CurrentOrder == SortOrder.Ascending)
-                        return string.Compare(member1.Base.Title, member2.Base.Title);
-                    else
-                        return string.Compare(member2.Base.Title, member1.Base.Title);
-
+                    return CurrentOrder == SortOrder.Ascending ? String.CompareOrdinal(member1.Base.Title, member2.Base.Title) : String.CompareOrdinal(member2.Base.Title, member1.Base.Title);
                 case SortByColumn.LastOnline:
-                    if (CurrentOrder == SortOrder.Ascending)
-                        return DateTime.Compare(member1.LastOnline, member2.LastOnline);
-                    else
-                        return DateTime.Compare(member2.LastOnline, member1.LastOnline);
-
+                    return CurrentOrder == SortOrder.Ascending ? DateTime.Compare(member1.LastOnline, member2.LastOnline) : DateTime.Compare(member2.LastOnline, member1.LastOnline);
                 case SortByColumn.Contribution:
                     if (member1.Base.Contribution < member2.Base.Contribution)
                         return CurrentOrder == SortOrder.Ascending ? -1 : 1;
@@ -1477,22 +1455,17 @@ namespace Radegast
             switch (SortBy)
             {
                 case SortByColumn.Subject:
-                    if (CurrentOrder == SortOrder.Ascending)
-                        return string.Compare(member1.Subject, member2.Subject);
-                    else
-                        return string.Compare(member2.Subject, member1.Subject);
-
+                    return CurrentOrder == SortOrder.Ascending
+                        ? String.CompareOrdinal(member1.Subject, member2.Subject) 
+                        : String.CompareOrdinal(member2.Subject, member1.Subject);
                 case SortByColumn.Sender:
-                    if (CurrentOrder == SortOrder.Ascending)
-                        return string.Compare(member1.FromName, member2.FromName);
-                    else
-                        return string.Compare(member2.FromName, member1.FromName);
-
+                    return CurrentOrder == SortOrder.Ascending 
+                        ? String.CompareOrdinal(member1.FromName, member2.FromName) 
+                        : String.CompareOrdinal(member2.FromName, member1.FromName);
                 case SortByColumn.Date:
-                    if (CurrentOrder == SortOrder.Ascending)
-                        return IntCompare(member1.Timestamp, member2.Timestamp);
-                    else
-                        return IntCompare(member2.Timestamp, member1.Timestamp);
+                    return CurrentOrder == SortOrder.Ascending 
+                        ? IntCompare(member1.Timestamp, member2.Timestamp) 
+                        : IntCompare(member2.Timestamp, member1.Timestamp);
             }
 
             return 0;

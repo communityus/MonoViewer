@@ -87,13 +87,13 @@ namespace Radegast
             if (OnNotificationDisplayed == null) return;
             try
             {
-                e.Type = this.Type;
-                WorkPool.QueueUserWorkItem((object o) => Notificaton_Displayed(this, e));
+                e.Type = Type;
+                WorkPool.QueueUserWorkItem(o => Notificaton_Displayed(this, e));
             }
             catch (Exception ex)
             {
                 Console.WriteLine("" + ex);
-                OpenMetaverse.Logger.Log("Error executing notification callback", OpenMetaverse.Helpers.LogLevel.Warning, ex);
+                Logger.Log("Error executing notification callback", Helpers.LogLevel.Warning, ex);
             }
         }
 
@@ -102,13 +102,12 @@ namespace Radegast
             try
             {
                 e.HookNotification(this);
-                if (OnNotificationDisplayed != null)
-                    OnNotificationDisplayed(notification, e);
+                OnNotificationDisplayed?.Invoke(notification, e);
             }
             catch (Exception ex)
             {
                 Console.WriteLine("" + ex);
-                OpenMetaverse.Logger.Log("Error executing notification displayed", OpenMetaverse.Helpers.LogLevel.Warning, ex);
+                Logger.Log("Error executing notification displayed", Helpers.LogLevel.Warning, ex);
             }
         }
     }
@@ -197,13 +196,12 @@ namespace Radegast
             {
                 try
                 {
-                    if (OnNotificationClosed != null)
-                        OnNotificationClosed(this, this);
+                    OnNotificationClosed?.Invoke(this, this);
                 }
                 catch (Exception ex)
                 {
-                    OpenMetaverse.Logger.Log("Error executing OnNotificationClosed " + Text,
-                                             OpenMetaverse.Helpers.LogLevel.Warning, ex);
+                    Logger.Log("Error executing OnNotificationClosed " + Text,
+                                             Helpers.LogLevel.Warning, ex);
                 }
                 if (!CanClose) Dispose();
             }
@@ -219,12 +217,11 @@ namespace Radegast
             ButtonSelected = true;
             try
             {
-                if (OnNotificationClicked != null)
-                    OnNotificationClicked(sender, e, this);
+                OnNotificationClicked?.Invoke(sender, e, this);
             }
             catch (Exception ex)
             {
-                OpenMetaverse.Logger.Log("Error executing OnNotificationClicked", OpenMetaverse.Helpers.LogLevel.Warning, ex);
+                Logger.Log("Error executing OnNotificationClicked", Helpers.LogLevel.Warning, ex);
             }
             if (CanClose)
             {

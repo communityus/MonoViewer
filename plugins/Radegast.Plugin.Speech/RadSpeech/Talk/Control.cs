@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using System.Threading;
 using OpenMetaverse;
-using Radegast;
 
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
@@ -415,7 +412,7 @@ namespace RadegastSpeech.Talk
             }
             catch (Exception e)
             {
-                System.Console.WriteLine("Synth shutdown " + e.Message);
+                Console.WriteLine("Synth shutdown " + e.Message);
             }
         }
         #endregion

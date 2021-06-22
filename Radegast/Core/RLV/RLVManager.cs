@@ -1,33 +1,23 @@
-﻿// 
-// Radegast Metaverse Client
-// Copyright (c) 2009-2014, Radegast Development Team
-// All rights reserved.
-// 
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
-// 
-//     * Redistributions of source code must retain the above copyright notice,
-//       this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the application "Radegast", nor the names of its
-//       contributors may be used to endorse or promote products derived from
-//       this software without specific prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// $Id$
-//
+﻿/**
+ * Radegast Metaverse Client
+ * Copyright(c) 2009-2014, Radegast Development Team
+ * Copyright(c) 2016-2020, Sjofn, LLC
+ * All rights reserved.
+ *  
+ * Radegast is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.If not, see<https://www.gnu.org/licenses/>.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -254,7 +244,7 @@ namespace Radegast
                 var rule = new RLVRule
                 {
                     Behaviour = m.Groups["behaviour"].ToString().ToLower(),
-                    Option = m.Groups["option"].ToString().ToLower(),
+                    Option = m.Groups["option"].ToString(),
                     Param = m.Groups["param"].ToString().ToLower(),
                     Sender = e.SourceID,
                     SenderName = e.FromName
@@ -353,6 +343,46 @@ namespace Radegast
                         }
                         break;
 
+                    case "getpath":
+                        if (int.TryParse(rule.Param, out chan) && chan > 0)
+                        {
+                            var attachment = client.Network.CurrentSim.ObjectsPrimitives.Find(p => p.ParentID == client.Self.LocalID && p.ID == rule.Sender);
+                            if (attachment != null && client.Inventory.Store.Items.ContainsKey(CurrentOutfitFolder.GetAttachmentItem(attachment)))
+                            {
+                                var item = client.Inventory.Store.Items[CurrentOutfitFolder.GetAttachmentItem(attachment)];
+                                var path = FindFullInventoryPath(item, "").Substring(5);
+                                Respond(chan, path);
+                            }
+                        }
+                        break;
+
+                    case "getpathnew":
+                        if (int.TryParse(rule.Param, out chan) && chan > 0)
+                        {
+                            if (UUID.TryParse(rule.Option, out UUID uuid) && uuid != UUID.Zero)
+                            {
+                                var attachment = client.Network.CurrentSim.ObjectsPrimitives.Find(p => p.ParentID == client.Self.LocalID && p.ID == uuid);
+                                if (attachment != null && client.Inventory.Store.Items.ContainsKey(CurrentOutfitFolder.GetAttachmentItem(attachment)))
+                                {
+                                    var item = client.Inventory.Store.Items[CurrentOutfitFolder.GetAttachmentItem(attachment)];
+                                    var path = FindFullInventoryPath(item, "");
+                                    if (path.StartsWith("#RLV"))
+                                    {
+                                        Respond(chan, "getpathnew: " + path.Substring(5));
+                                    }
+                                    else
+                                    {
+                                        Respond(chan, "getpathnew: ");
+                                    }
+                                }
+                                else
+                                {
+                                    Respond(chan, "getpathnew: ");
+                                }
+                            }
+                        }
+                        break;
+
                     case "getsitid":
                         if (int.TryParse(rule.Param, out chan) && chan > 0)
                         {
@@ -437,20 +467,40 @@ namespace Radegast
                         break;
 
                     case "tpto":
-                        var coord = rule.Option.Split('/');
-
-                        try
+                        if (rule.Param == "force")
                         {
-                            float gx = float.Parse(coord[0], Utils.EnUsCulture);
-                            float gy = float.Parse(coord[1], Utils.EnUsCulture);
-                            float z = float.Parse(coord[2], Utils.EnUsCulture);
-                            float x = 0, y = 0;
+                            try
+                            {
+                                var coord = rule.Option.Split(new[] {'/',';'});
 
-                            instance.TabConsole.DisplayNotificationInChat("Starting teleport...");
-                            ulong h = Helpers.GlobalPosToRegionHandle(gx, gy, out x, out y);
-                            client.Self.RequestTeleport(h, new Vector3(x, y, z));
+                                if (coord.Length == 3) // 3 params is a global coordinate teleport: @tpto:<X>/<Y>/<Z>=force
+                                {
+                                    float gx = float.Parse(coord[0], Utils.EnUsCulture);
+                                    float gy = float.Parse(coord[1], Utils.EnUsCulture);
+                                    float z = float.Parse(coord[2], Utils.EnUsCulture);
+                                    float x = 0, y = 0;
+
+                                    instance.TabConsole.DisplayNotificationInChat("Starting teleport...");
+                                    ulong h = Helpers.GlobalPosToRegionHandle(gx, gy, out x, out y);
+                                    client.Self.RequestTeleport(h, new Vector3(x, y, z));
+                                }
+                                else if (coord.Length == 4 || coord.Length == 5) // 4/5 params is a region-local coordinate teleport (no ;lookat support): @tpto:<region_name>/<X_local>/<Y_local>/<Z_local>[;lookat]=force
+                                {
+                                    string n = coord[0];
+                                    float x = float.Parse(coord[1], Utils.EnUsCulture);
+                                    float y = float.Parse(coord[2], Utils.EnUsCulture);
+                                    float z = float.Parse(coord[3], Utils.EnUsCulture);
+
+                                    GridRegion r;
+                                    client.Grid.GetGridRegion(n, GridLayerType.Objects, out r);
+
+                                    instance.TabConsole.DisplayNotificationInChat("Starting teleport...");
+                                    client.Self.RequestTeleport(r.RegionHandle, new Vector3(x, y, z));
+                                }
+
+                            }
+                            catch (Exception) { }
                         }
-                        catch (Exception) { }
 
                         break;
 
@@ -582,6 +632,23 @@ namespace Radegast
                                         }
                                     }
                                     instance.COF.RemoveFromOutfit(allSubfolderWorn);
+                                }
+                            }
+                        }
+                        break;
+
+                    case "detachallthis":
+                        if (rule.Param == "force")
+                        {
+                            var attachment = client.Network.CurrentSim.ObjectsPrimitives.Find(p => p.ParentID == client.Self.LocalID && p.ID == rule.Sender);
+                            if (attachment != null && client.Inventory.Store.Items.ContainsKey(CurrentOutfitFolder.GetAttachmentItem(attachment)))
+                            {
+                                var folder = client.Inventory.Store.Items[CurrentOutfitFolder.GetAttachmentItem(attachment)].Parent;
+                                if (folder != null)
+                                {
+                                    List<InventoryItem> outfit = new List<InventoryItem>();
+                                    GetAllItems(folder, true, ref outfit);
+                                    instance.COF.RemoveFromOutfit(outfit);
                                 }
                             }
                         }

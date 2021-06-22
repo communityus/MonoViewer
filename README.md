@@ -7,9 +7,13 @@ Project founder:
 
 * **Latif Khalifa**
 
-Current maintainer and lead developer:
+Current maintainer and lead developer of the LGPL branch:
 
 * **Cinder Roxley** (email cinder cinderblocks.biz)
+
+Current maintainer and lead developer of the this BSD licensed branch:
+
+* **CommunityUs Llc.** (Chaz Bacon/Chad Macon)
 
 Alumni Developers:
 
@@ -21,10 +25,6 @@ Alumni Developers:
 [![Build status](https://ci.appveyor.com/api/projects/status/g34olv3opd2vho32/branch/master?svg=true)](https://ci.appveyor.com/project/cinderblocks57647/radegast/branch/master)
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/98684cbe995245f7ad1781cf254a742c)](https://www.codacy.com/manual/cinderblocks/radegast?utm_content=cinderblocks/radegast)
-
-CommunityUs Llc:
-
-* **Chad Macon** aka Chaz Bacon
 
 # License
 

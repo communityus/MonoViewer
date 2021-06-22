@@ -1,16 +1,7 @@
-```
-______          _                      _   
-| ___ \        | |                    | |  
-| |_/ /__ _  __| | ___  __ _  __ _ ___| |_ 
-|    // _` |/ _` |/ _ \/ _` |/ _` / __| __|
-| |\ \ (_| | (_| |  __/ (_| | (_| \__ \ |_ 
-\_| \_\__,_|\__,_|\___|\__, |\__,_|___/\__|
-                        __/ |              
-                       |___/ 
-```
-Radegast Metaverse Client (http://radegast.life/)
-
-[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+# About
+A fork of the radegast lite viewer for the BSD licensed open simulator.
+# Author
+repopulate this.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/g34olv3opd2vho32/branch/master?svg=true)](https://ci.appveyor.com/project/cinderblocks57647/radegast/branch/master)
 

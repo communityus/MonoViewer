@@ -1,23 +1,10 @@
-﻿/**
- * Radegast Metaverse Client
- * Copyright(c) 2009-2014, Radegast Development Team
- * Copyright(c) 2016-2020, Sjofn, LLC
- * All rights reserved.
- *  
- * Radegast is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.If not, see<https://www.gnu.org/licenses/>.
+﻿#region --- MIT License ---
+/* Licensed under the MIT/X11 license.
+ * Copyright (c) 2011 mjt
+ * This notice may not be removed from any source distribution.
+ * See license.txt for licensing details.
  */
-
+#endregion
 /* 
  * tutoriaali:
  * http://www.crownandcutlass.com/features/technicaldetails/frustum.html
@@ -178,6 +165,7 @@ namespace Radegast.Rendering
     {
         Vector3 Min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
         Vector3 Max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+        float R = 0f;
 
         public Vector3 ScaledMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
         public Vector3 ScaledMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
@@ -205,6 +193,7 @@ namespace Radegast.Rendering
             }
 
             Vector3 dist = Max - Min;
+            R = dist.Length();
             mesh.Center = Min + (dist / 2);
             CalcScaled(scale);
         }
@@ -227,6 +216,7 @@ namespace Radegast.Rendering
             if (vol.Max.Y > Max.Y) Max.Y = vol.Max.Y;
             if (vol.Max.Z > Max.Z) Max.Z = vol.Max.Z;
             Vector3 dist = Max - Min;
+            R = dist.Length();
             CalcScaled(scale);
         }
 

@@ -1,66 +1,80 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <AssemblyTitle>RadSpeechWin</AssemblyTitle>
     <Company>Hewlett-Packard Company</Company>
     <Product>RadSpeechWin</Product>
-    <Copyright>Copyright © Hewlett-Packard Company 2009, Copyright (c) 2016-2021, Sjofn, LLC. All rights reserved.</Copyright>
+    <Copyright>Copyright © Hewlett-Packard Company 2009</Copyright>
     <AssemblyVersion>3.0.0</AssemblyVersion>
     <FileVersion>3.0.0</FileVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugType>full</DebugType>
-    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\..\bin\</OutputPath>
     <BaseIntermediateOutputPath>obj\x86\Debug\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
     <DefineConstants>TRACE;DEBUG;SMARTHREADPOOL_REF</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>portable</DebugType>
-    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\..\bin\</OutputPath>
     <BaseIntermediateOutputPath>obj\x86\Release\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
     <DefineConstants>TRACE;SMARTHREADPOOL_REF</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseLinux|x86'">
-    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>TRACE;SMARTHREADPOOL_REF</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>portable</DebugType>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseMacOS|x86'">
-    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>TRACE;SMARTHREADPOOL_REF</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>portable</DebugType>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWindows|x86'">
-    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>TRACE;SMARTHREADPOOL_REF</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>portable</DebugType>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\bin\Release\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug Local|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;SMARTHREADPOOL_REF</DefineConstants>
+    <DebugType>full</DebugType>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LibreMetaverse" Version="1.6.0.157" />
-    <PackageReference Include="LibreMetaverse.PrimMesher" Version="1.6.0.157" />
-    <PackageReference Include="LibreMetaverse.StructuredData" Version="1.6.0.157" />
-    <PackageReference Include="LibreMetaverse.Types" Version="1.6.0.157" />
-    <PackageReference Include="log4net" Version="2.0.12" />
+    <PackageReference Include="LibreMetaverse" Version="1.4.5.48" />
+    <PackageReference Include="LibreMetaverse.PrimMesher" Version="1.4.5.48" />
+    <PackageReference Include="LibreMetaverse.StructuredData" Version="1.4.5.48" />
+    <PackageReference Include="LibreMetaverse.Types" Version="1.4.5.48" />
+    <PackageReference Include="LinkDotNet.NUniqueHardwareID" Version="0.4.1" />
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="protobuf-net" Version="2.4.4" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+    <PackageReference Include="System.Security.Cryptography.Encoding" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
+    <PackageReference Include="XmlRpcCs" Version="2.1.1.2" />
+    <PackageReference Include="zlib.net" Version="1.0.4.0" />
+    <PackageReference Include="zlib.net-mutliplatform" Version="1.0.4" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Speech" />
+    <Reference Include="System.Data.DataSetExtensions" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Radegast\Radegast.csproj" />
@@ -70,6 +84,9 @@
     <Compile Remove="obj\x86\Debug\TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs" />
     <Compile Remove="obj\x86\Debug\TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs" />
     <Compile Remove="obj\x86\Debug\TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs" />
+    <Compile Remove="obj\x86\Debug Local\TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs" />
+    <Compile Remove="obj\x86\Debug Local\TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs" />
+    <Compile Remove="obj\x86\Debug Local\TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs" />
     <Compile Remove="obj\x86\Release\TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs" />
     <Compile Remove="obj\x86\Release\TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs" />
     <Compile Remove="obj\x86\Release\TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs" />

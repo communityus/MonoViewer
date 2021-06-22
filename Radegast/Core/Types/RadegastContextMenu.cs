@@ -1,22 +1,33 @@
-/**
- * Radegast Metaverse Client
- * Copyright(c) 2009-2014, Radegast Development Team
- * Copyright(c) 2016-2020, Sjofn, LLC
- * All rights reserved.
- *  
- * Radegast is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.If not, see<https://www.gnu.org/licenses/>.
- */
+// 
+// Radegast Metaverse Client
+// Copyright (c) 2009-2014, Radegast Development Team
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//     * Redistributions of source code must retain the above copyright notice,
+//       this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the application "Radegast", nor the names of its
+//       contributors may be used to endorse or promote products derived from
+//       this software without specific prior written permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $Id$
+//
 
 using System;
 using System.Collections.Generic;
@@ -29,10 +40,10 @@ namespace Radegast
     /// <summary>
     /// A Radegast based ContextMenuStrip
     ///   the Opened/Closing/Selected/Clicked events may be subscribed to by plugins
-    /// This class is our Drop In replacement that add accessibility features to context menus
+    /// This class is our Drop In replacement that add accessablity features to context menus
     /// 
     /// To use:  
-    ///   1) In the 'Forms designer', initially drag in or use a ContextMenuStrip
+    ///   1) In the 'Forms designer', intially drag in or use a ContextMenuStrip
     ///   2) The replace the declared type and constructor with this class in the MyForm.Designer.cs
     ///   3) Pretend it is a typical ContextMenuStrip
     /// 
@@ -116,7 +127,7 @@ namespace Radegast
 
         /// <summary>
         /// Fires whenever a context menu is "Opening" (not yet opened) anywhere from Radegast
-        ///   Accessibility should be more interested in OnContentMenuOpened
+        ///   Accesability should be more interested in OnContentMenuOpened
         ///   This is for times context menus are busy deciding what to enable/disable
         /// </summary>
         public static event ContextMenuCallback OnContentMenuOpening;
@@ -189,11 +200,11 @@ namespace Radegast
         readonly object _selectionLock = new object();
 
         /// <summary>
-        /// Children we have added our hooks into
+        /// Childs we have added our hooks into
         /// </summary>
         public readonly HashSet<ToolStripDropDownItem> KnownItems = new HashSet<ToolStripDropDownItem>();
 
-        // for Control Character we'd use when the Keys.Apps is not available 
+        // for Control Chartacter we'd use when the Keys.Apps is not available 
         public const Keys ContexMenuKeyCode = Keys.Enter;
 
         /// <summary>
@@ -232,13 +243,12 @@ namespace Radegast
 
         private void Rad_OnItemRemoved(object sender, ToolStripItemEventArgs e)
         {
-            if (!(e.Item is ToolStripDropDownItem Item)) return;
-
-            lock (KnownItems)
-            {
-                DeregisterItemEvents(Item);
-                WriteDebug("removed {0}", e.Item);
-            }
+            if (e.Item is ToolStripDropDownItem Item)
+                lock (KnownItems)
+                {
+                    DeregisterItemEvents(Item);
+                    WriteDebug("removed {0}", e.Item);
+                }
         }
 
 
@@ -255,7 +265,7 @@ namespace Radegast
 
         public override string ToString()
         {
-            return $"RadMenu {Name} MenuItem='{MenuItem}' selection='{Selection}'";
+            return string.Format("RadMenu {0} MenuItem='{1}' selection='{2}'", Name, MenuItem, Selection);
         }
 
 
@@ -286,15 +296,16 @@ namespace Radegast
         private void Rad_Menu_Opened(object sender, EventArgs e)
         {
             WriteDebug("Menu_Opened: {0} {1}", sender, e);
-            if (OnContentMenuOpened == null) return;
-
-            try
+            if (OnContentMenuOpened != null)
             {
-                OnContentMenuOpened(sender, new ContextMenuEventArgs(this, MenuItem, Selection));
-            }
-            catch (Exception ex)
-            {
-                Logger.DebugLog("ERROR " + ex + " in " + this);
+                try
+                {
+                    OnContentMenuOpened(sender, new ContextMenuEventArgs(this, MenuItem, Selection));
+                }
+                catch (Exception ex)
+                {
+                    Logger.DebugLog("ERROR " + ex + " in " + this);
+                }
             }
         }
 
@@ -307,22 +318,32 @@ namespace Radegast
                 RenderMode = ToolStripRenderMode.System;
             }
             e.Cancel = false;
-            OnContentMenuOpening?.Invoke(sender, new ContextMenuEventArgs(this, MenuItem, Selection));
+            if (OnContentMenuOpening != null)
+            {
+                try
+                {
+                    OnContentMenuOpening(sender, new ContextMenuEventArgs(this, MenuItem, Selection));
+                }
+                catch (Exception)
+                {
+
+                    throw;
+                }
+            }
         }
 
         private void Rad_Menu_Closing(object sender, ToolStripDropDownClosingEventArgs e)
         {
             WriteDebug("Menu_Closing: {0} {1}", sender, e.CloseReason);
-            if (OnContentMenuClosing == null) return;
-
-            try
-            {
-                OnContentMenuClosing(sender, new ContextMenuEventArgs(this, MenuItem, Selection));
-            }
-            catch (Exception ex)
-            {
-                Logger.DebugLog("ERROR " + ex + " in " + this);
-            }
+            if (OnContentMenuClosing != null)
+                try
+                {
+                    OnContentMenuClosing(sender, new ContextMenuEventArgs(this, MenuItem, Selection));
+                }
+                catch (Exception ex)
+                {
+                    Logger.DebugLog("ERROR " + ex + " in " + this);
+                }
         }
 
         // This might be both the best Keyboard and Mouse event
@@ -330,15 +351,15 @@ namespace Radegast
         {
             SetMenuItemSelected(e.ClickedItem);
             WriteDebug("Menu_ItemClicked: {0} {1}", sender, e.ClickedItem);
-            if (OnContentMenuItemClicked == null) return;
-            try
-            {
-                OnContentMenuItemClicked(sender, new ContextMenuEventArgs(this, MenuItem, Selection));
-            }
-            catch (Exception ex)
-            {
-                Logger.DebugLog("ERROR " + ex + " in " + this);
-            }
+            if (OnContentMenuItemClicked != null)
+                try
+                {
+                    OnContentMenuItemClicked(sender, new ContextMenuEventArgs(this, MenuItem, Selection));
+                }
+                catch (Exception ex)
+                {
+                    Logger.DebugLog("ERROR " + ex + " in " + this);
+                }
         }
 
         /// <summary>
@@ -347,32 +368,33 @@ namespace Radegast
         /// <param name="sender"></param>
         private void SetMenuItemSelected(object sender)
         {
-            if (!(sender is ToolStripDropDownItem stripDropDownItem)) return;
-
-            // dereference a chain of dropdown items
-            if (stripDropDownItem.HasDropDownItems)
+            if (sender is ToolStripDropDownItem stripDropDownItem)
             {
-                foreach (var s in stripDropDownItem.DropDownItems)
+                // dereference a chain of dropdown items
+                if (stripDropDownItem.HasDropDownItems)
                 {
-                    if (!(s is ToolStripDropDownItem sub)) continue;
-
-                    if (sub.Selected)
+                    foreach (var s in stripDropDownItem.DropDownItems)
                     {
-                        SetMenuItemSelected(sub);
-                        return;
+                        ToolStripDropDownItem sub = s as ToolStripDropDownItem;
+                        if (sub == null) continue;
+                        if (sub.Selected)
+                        {
+                            SetMenuItemSelected(sub);
+                            return;
+                        }
                     }
                 }
-            }
-            // otherwise use it
-            lock (_selectionLock)
-            {
-                if (MenuItem == stripDropDownItem) return;
-                MenuItem = stripDropDownItem;
-                if (string.IsNullOrEmpty(MenuItem.ToolTipText) || MenuItem.ToolTipText.StartsWith(" "))
+                // otherwise use it
+                lock (_selectionLock)
                 {
-                    MenuItem.ToolTipText = " " + MenuItem.Text + " " + Selection;
+                    if (MenuItem == stripDropDownItem) return;
+                    MenuItem = stripDropDownItem;
+                    if (string.IsNullOrEmpty(MenuItem.ToolTipText) || MenuItem.ToolTipText.StartsWith(" "))
+                    {
+                        MenuItem.ToolTipText = " " + MenuItem.Text + " " + Selection;
+                    }
+                    OnItemSelected(MenuItem);
                 }
-                OnItemSelected(MenuItem);
             }
         }
 
@@ -381,15 +403,15 @@ namespace Radegast
             lock (_selectionLock)
             {
                 WriteDebug("OnMenuItemChanged {0}", this);
-                if (OnContentMenuItemSelected == null) return;
-                try
-                {
-                    OnContentMenuItemSelected(this, new ContextMenuEventArgs(this, MenuItem, Selection));
-                }
-                catch (Exception ex)
-                {
-                    Logger.DebugLog("ERROR " + ex + " in " + this);
-                }
+                if (OnContentMenuItemSelected != null)
+                    try
+                    {
+                        OnContentMenuItemSelected(this, new ContextMenuEventArgs(this, MenuItem, Selection));
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.DebugLog("ERROR " + ex + " in " + this);
+                    }
             }
         }
 
@@ -458,7 +480,7 @@ namespace Radegast
                     // Not so vital events that may lead to discovering some accessiblity features
                     item.GiveFeedback -= Rad_Item_GiveFeedback;
 
-                    // Deregister children
+                    // Deregister childs
                     if (item.HasDropDownItems)
                     {
                         foreach (var collection in item.DropDownItems)
@@ -505,15 +527,16 @@ namespace Radegast
 
         private void Rad_Item_Leave(object sender, EventArgs e)
         {
-            if (!(sender is ToolStripDropDownItem stripDropDownItem)) return;
-
-            lock (_selectionLock)
+            if (sender is ToolStripDropDownItem stripDropDownItem)
             {
-                if (MenuItem == stripDropDownItem)
+                lock (_selectionLock)
                 {
-                    WriteDebug("Item_Leave: {0} {1}", sender, e);
-                    MenuItem = null;
-                    OnItemSelected(MenuItem);
+                    if (MenuItem == stripDropDownItem)
+                    {
+                        WriteDebug("Item_Leave: {0} {1}", sender, e);
+                        MenuItem = null;
+                        OnItemSelected(MenuItem);
+                    }
                 }
             }
         }

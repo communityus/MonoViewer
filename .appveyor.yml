@@ -1,8 +1,9 @@
 init:
-  - ps: if ($env:APPVEYOR_REPO_TAG -eq "true") { $env:TAG_VERSION = "$env:APPVEYOR_REPO_TAG_NAME.$env:APPVEYOR_BUILD_NUMBER" } else { $env:TAG_VERSION = "v3.0.$env:APPVEYOR_BUILD_NUMBER" }
+  - ps: if ($env:APPVEYOR_REPO_TAG -eq "true") { $env:TAG_VERSION = "$env:APPVEYOR_REPO_TAG_NAME.$env:APPVEYOR_BUILD_NUMBER" } else { $env:TAG_VERSION = "v2.29.$env:APPVEYOR_BUILD_NUMBER" }
   - ps: $env:TAG_VERSION = $env:TAG_VERSION -replace 'v',''
   - ps: Write-Host "Setting version to '$env:TAG_VERSION'"
   - ps: Update-AppveyorBuild -Version "$env:TAG_VERSION"
+  - ps: Install-Module -Name SignPath
 
 image: Visual Studio 2019
 
@@ -10,15 +11,12 @@ branches:
   except:
     - localbuilding
 
-configuration: ReleaseWindows
+configuration: Release
 
 environment:
-  PfxDownloadUrl:
-    secure: 6zETilPjqhwgznp0rOyu2lloNy/uIU0coJBWCW+ADBiofQTU8ZuU3BCIEifEPI1R
-  PfxDownloadPasswd:
-    secure: qzHJldnavMFT8+Cm2eXndg==
-  PfxPassword:
-    secure: +vWSGzLkiBGVIxfPb+iRtD+/maQjI2d92hN4PoNAxMc=
+  SIGN_TOKEN:
+    secure: 1CtzaepYsuG1vKjlwJVLmjjIuhNHexDv/cJLjBKv83xQ98AquMUG/+v4mFoqXM6x
+
 
 pull_requests:
   do_not_increment_build_number: true
@@ -40,22 +38,14 @@ dotnet_csproj:
   file_version: '{version}'
 
 before_build:
-  - ps: util/InstallRemotePfx.ps1 -PfxDownloadUrl $env:PfxDownloadUrl -PfxDownloadUser AppVeyor -PfxDownloadPasswd $env:PfxDownloadPasswd -PfxPasswd $env:PfxPassword
   - nuget restore radegast.sln
 
+
 after_build:
-  - cmd: '7z a -ttar -so Radegast-%TAG_VERSION%.tar %APPVEYOR_BUILD_FOLDER%\bin\Release\ | 7z a -si Radegast-%TAG_VERSION%.tbz'
-  - cmd: 'msbuild "%APPVEYOR_BUILD_FOLDER%\radegast.sln" /t:RadegastBundle /p:Platform="x86" /p:BuildProjectReferences=false /m /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"'
-  - ps: Copy-Item bin\Release\RadegastSetup.msi RadegastSetup-$env:TAG_VERSION.msi
-  - ps: Copy-Item bin\Release\RadegastBundle.exe RadegastSetup-$env:TAG_VERSION.exe
+  - cmd: '7z a -ttar -so Radegast-%TAG_VERSION%.tar bin\ | 7z a -si Radegast-%TAG_VERSION%.tbz'
+ 
 
 artifacts:
-  - path: 'RadegastSetup-*.exe'
-    name: 'Radegast Windows Bundle'
-    type: Auto
-  - path: 'RadegastSetup-*.msi'
-    name: 'Radegast Windows MSI'
-    type: Auto
   - path: 'Radegast-*.tbz'
     name: 'Radegast Linux'
     type: Auto

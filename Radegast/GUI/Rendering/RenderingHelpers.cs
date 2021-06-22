@@ -1,22 +1,33 @@
-﻿/**
- * Radegast Metaverse Client
- * Copyright(c) 2009-2014, Radegast Development Team
- * Copyright(c) 2016-2020, Sjofn, LLC
- * All rights reserved.
- *  
- * Radegast is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.If not, see<https://www.gnu.org/licenses/>.
- */
+﻿// 
+// Radegast Metaverse Client
+// Copyright (c) 2009-2014, Radegast Development Team
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//     * Redistributions of source code must retain the above copyright notice,
+//       this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the application "Radegast", nor the names of its
+//       contributors may be used to endorse or promote products derived from
+//       this software without specific prior CreateReflectionTexture permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $Id: RenderingHelpers.cs 1136 2011-09-05 22:45:11Z latifer $
+//
 
 using System;
 using System.Collections.Generic;
@@ -341,8 +352,8 @@ namespace Radegast.Rendering
     public static class RHelp
     {
         public static readonly Vector3 InvalidPosition = new Vector3(99999f, 99999f, 99999f);
-        static readonly float t1 = 0.075f;
-        static readonly float t2 = t1 / 5.7f;
+        static float t1 = 0.075f;
+        static float t2 = t1 / 5.7f;
 
         public static Vector3 Smoothed1stOrder(Vector3 curPos, Vector3 targetPos, float lastFrameTime)
         {
@@ -461,9 +472,11 @@ namespace Radegast.Rendering
                     i += 16;
 
                     tgaData = new byte[uncompressedSize];
-                    using var compressed = new DeflateStream(f, CompressionMode.Decompress);
-                    int read = 0;
-                    while ((read = compressed.Read(tgaData, read, uncompressedSize - read)) > 0) { }
+                    using (var compressed = new DeflateStream(f, CompressionMode.Decompress))
+                    {
+                        int read = 0;
+                        while ((read = compressed.Read(tgaData, read, uncompressedSize - read)) > 0) { }
+                    }
                 }
 
                 return true;
@@ -511,8 +524,10 @@ namespace Radegast.Rendering
                     i += 16;
 
                     // compressed texture data
-                    using var compressed = new DeflateStream(f, CompressionMode.Compress);
-                    compressed.Write(tgaData, 0, tgaData.Length);
+                    using (var compressed = new DeflateStream(f, CompressionMode.Compress))
+                    {
+                        compressed.Write(tgaData, 0, tgaData.Length);
+                    }
                 }
                 return true;
             }
@@ -564,7 +579,7 @@ namespace Radegast.Rendering
         public static int GLLoadImage(Bitmap bitmap, bool hasAlpha, bool useMipmap)
         {
             useMipmap = useMipmap && RenderSettings.HasMipmap;
-            int ret;
+            int ret = -1;
             GL.GenTextures(1, out ret);
             GL.BindTexture(TextureTarget.Texture2D, ret);
 
@@ -853,8 +868,10 @@ namespace Radegast.Rendering
                         mtl.AppendLine();
 
                         // Write the vertices, texture coordinates, and vertex normals for this side
-                        foreach (var vertex in face.Vertices)
+                        for (int k = 0; k < face.Vertices.Count; k++)
                         {
+                            Vertex vertex = face.Vertices[k];
+
                             #region Vertex
 
                             Vector3 pos = vertex.Position;
@@ -885,17 +902,12 @@ namespace Radegast.Rendering
                             #region Vertex Normal
 
                             // HACK: Sometimes normals are getting set to <NaN,NaN,NaN>
-                            if (!Single.IsNaN(vertex.Normal.X) && 
-                                !Single.IsNaN(vertex.Normal.Y) &&
-                                !Single.IsNaN(vertex.Normal.Z))
-                            {
+                            if (!Single.IsNaN(vertex.Normal.X) && !Single.IsNaN(vertex.Normal.Y) && !Single.IsNaN(vertex.Normal.Z))
                                 obj.AppendFormat("vn {0} {1} {2}{3}", vertex.Normal.X, vertex.Normal.Y, vertex.Normal.Z,
                                     Environment.NewLine);
-                            }
                             else
-                            {
                                 obj.AppendLine("vn 0.0 1.0 0.0");
-                            }
+
                             #endregion Vertex Normal
                         }
 
@@ -964,9 +976,9 @@ namespace Radegast.Rendering
             float[] mat = new float[16];
 
             // Transpose the quaternion (don't ask me why)
-            q.X *= -1f;
-            q.Y *= -1f;
-            q.Z *= -1f;
+            q.X = q.X * -1f;
+            q.Y = q.Y * -1f;
+            q.Z = q.Z * -1f;
 
             float x2 = q.X + q.X;
             float y2 = q.Y + q.Y;
@@ -1009,9 +1021,9 @@ namespace Radegast.Rendering
             float[] mat = new float[16];
 
             // Transpose the quaternion (don't ask me why)
-            q.X *= -1f;
-            q.Y *= -1f;
-            q.Z *= -1f;
+            q.X = q.X * -1f;
+            q.Y = q.Y * -1f;
+            q.Z = q.Z * -1f;
 
             float x2 = q.X + q.X;
             float y2 = q.Y + q.Y;
@@ -1185,7 +1197,7 @@ namespace Radegast.Rendering
         public int mSize;
         public AssetType mAssetType;
 
-        public int Readblock(byte[] blockdata, int offset)
+        public int readblock(byte[] blockdata, int offset)
         {
 
             BitPack input = new BitPack(blockdata, offset);
@@ -1205,9 +1217,9 @@ namespace Radegast.Rendering
 
     }
 
-    public class StaticVFS
+    public class staticVFS
     {
-        public static void ReadVFSheaders(string datafile, string indexfile)
+        public static void readVFSheaders(string datafile, string indexfile)
         {
             FileStream datastream;
             FileStream indexstream;
@@ -1223,7 +1235,7 @@ namespace Radegast.Rendering
             while (offset < indexstream.Length)
             {
                 VFSblock block = new VFSblock();
-                offset = block.Readblock(blockdata, offset);
+                offset = block.readblock(blockdata, offset);
 
                 FileStream writer = File.Open(OpenMetaverse.Settings.RESOURCE_DIR + System.IO.Path.DirectorySeparatorChar + block.mFileID, FileMode.Create);
                 byte[] data = new byte[block.mSize];

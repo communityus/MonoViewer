@@ -1,3 +1,6 @@
+# About
+A fork of the radegast lite viewer for the BSD licensed open simulator.
+
 # Author
 
 Project founder:
@@ -19,11 +22,16 @@ Alumni Developers:
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/98684cbe995245f7ad1781cf254a742c)](https://www.codacy.com/manual/cinderblocks/radegast?utm_content=cinderblocks/radegast)
 
+CommunityUs Llc:
+
+* **Chad Macon** aka Chaz Bacon
+
 # License
 
 **Radegast Metaverse Client**
 *Copyright © 2009-2018, Radegast Development Team*
 *Copyright © 2017-2019, Sjofn, LLC.*
+*Copyright © 2019-2021, CommunityUs, LLC.*
 *All rights reserved.*
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:

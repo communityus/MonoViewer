@@ -1,5 +1,3 @@
-# About
-A fork of the radegast lite viewer for the BSD licensed open simulator.
 # Author
 
 Project founder:
